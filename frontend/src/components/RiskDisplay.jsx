@@ -7,7 +7,7 @@
  * - Feature importance bar chart showing top risk factors
  */
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // Risk level thresholds and styling
 const RISK_LEVELS = {
@@ -128,7 +128,7 @@ function FeatureImportanceChart({ featureImportance }) {
             contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
           />
           <Bar dataKey="importance" radius={[0, 8, 8, 0]}>
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={colors[index]} />
             ))}
           </Bar>
