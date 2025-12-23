@@ -1,0 +1,20 @@
+# Development and Testing Dependencies
+
+# Testing framework
+pytest==7.4.4
+pytest-cov==4.1.0
+pytest-asyncio==0.23.3
+
+# Test utilities
+httpx==0.26.0  # For testing FastAPI endpoints
+faker==22.0.0  # For generating test data
+
+# Code quality
+black==23.12.1  # Code formatter
+flake8==7.0.0   # Linter
+mypy==1.8.0     # Type checker
+isort==5.13.2   # Import sorter
+
+# Development tools
+ipython==8.20.0  # Enhanced Python shell
+jupyter==1.0.0   # Notebooks for exploration
