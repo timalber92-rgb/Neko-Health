@@ -1,11 +1,9 @@
 services:
   - type: web
     name: healthguard-api
-    env: python
+    env: docker
     region: oregon
     plan: free
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: ENVIRONMENT
         value: production
