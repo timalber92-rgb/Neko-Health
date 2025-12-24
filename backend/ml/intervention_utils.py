@@ -106,19 +106,27 @@ def apply_simple_intervention_effects(patient_data: pd.DataFrame, action: int) -
         modified_data["trestbps"] *= 0.95  # 5% BP reduction
         modified_data["chol"] *= 0.90  # 10% cholesterol reduction
         modified_data["thalach"] *= 1.05  # 5% improved max HR
+        if "exang" in modified_data.columns and modified_data["exang"].iloc[0] == 1:
+            modified_data["exang"] = 0 if hash(str(modified_data.index[0])) % 5 > 0 else 1  # 80% success
     elif action == 2:  # Single Medication
         modified_data["trestbps"] *= 0.90  # 10% BP reduction
         modified_data["chol"] *= 0.85  # 15% cholesterol reduction
+        if "exang" in modified_data.columns and modified_data["exang"].iloc[0] == 1:
+            modified_data["exang"] = 0 if hash(str(modified_data.index[0])) % 10 > 2 else 1  # 70% success
     elif action == 3:  # Combination Therapy
         modified_data["trestbps"] *= 0.85  # 15% BP reduction
         modified_data["chol"] *= 0.80  # 20% cholesterol reduction
         modified_data["thalach"] *= 1.08  # 8% improved max HR
         modified_data["oldpeak"] *= 0.90  # 10% reduced ST depression
+        if "exang" in modified_data.columns and modified_data["exang"].iloc[0] == 1:
+            modified_data["exang"] = 0 if hash(str(modified_data.index[0])) % 2 == 0 else 1  # 50% success
     elif action == 4:  # Intensive Treatment
         modified_data["trestbps"] *= 0.80  # 20% BP reduction
         modified_data["chol"] *= 0.75  # 25% cholesterol reduction
         modified_data["thalach"] *= 1.10  # 10% improved max HR
         modified_data["oldpeak"] *= 0.80  # 20% reduced ST depression
+        if "exang" in modified_data.columns and modified_data["exang"].iloc[0] == 1:
+            modified_data["exang"] = 0 if hash(str(modified_data.index[0])) % 10 > 6 else 1  # 30% success (70% cure)
 
     return modified_data
 
@@ -173,30 +181,36 @@ def apply_intervention_effects(patient_data: pd.DataFrame, action: int) -> pd.Da
         return apply_simple_intervention_effects(patient_data, action)
 
     # Define base intervention effects for each action
+    # Note: exang is binary (0=no, 1=yes exercise-induced angina)
+    # Interventions can reduce likelihood of exercise-induced angina
     intervention_effects = {
         1: {  # Lifestyle Intervention
             "trestbps": 0.95,  # 5% reduction
             "chol": 0.90,  # 10% reduction
             "thalach": 1.05,  # 5% increase
             "oldpeak": 0.95,  # 5% reduction (lifestyle improves ECG)
+            "exang": 0.80,  # 20% reduction in exercise-induced angina probability
         },
         2: {  # Single Medication
             "trestbps": 0.90,  # 10% reduction
             "chol": 0.85,  # 15% reduction
             "thalach": 1.0,  # No change
             "oldpeak": 0.92,  # 8% reduction (meds improve cardiac function)
+            "exang": 0.70,  # 30% reduction in exercise-induced angina
         },
         3: {  # Combination Therapy
             "trestbps": 0.85,  # 15% reduction
             "chol": 0.80,  # 20% reduction
             "thalach": 1.08,  # 8% increase
             "oldpeak": 0.90,  # 10% reduction
+            "exang": 0.50,  # 50% reduction in exercise-induced angina
         },
         4: {  # Intensive Treatment
             "trestbps": 0.80,  # 20% reduction
             "chol": 0.75,  # 25% reduction
             "thalach": 1.10,  # 10% increase
             "oldpeak": 0.80,  # 20% reduction
+            "exang": 0.30,  # 70% reduction in exercise-induced angina
         },
     }
 
@@ -211,6 +225,21 @@ def apply_intervention_effects(patient_data: pd.DataFrame, action: int) -> pd.Da
             continue
 
         current_value = float(modified_data[metric_name].iloc[0])
+
+        # Special handling for binary features like exang
+        if metric_name == "exang":
+            # exang is binary: 1 = has exercise-induced angina, 0 = doesn't
+            # If patient has angina (1), intervention can reduce it
+            if current_value == 1:
+                # Use base_factor as probability of successful treatment
+                # e.g., 0.30 means 70% chance of eliminating angina
+                import random
+
+                random.seed(int(modified_data.index[0]))  # Deterministic based on patient
+                if random.random() > base_factor:
+                    modified_data[metric_name] = 0
+            # If no angina (0), keep it at 0
+            continue
 
         # Calculate adaptive reduction based on current state
         adaptive_factor = calculate_adaptive_reduction(current_value, base_factor, metric_name)

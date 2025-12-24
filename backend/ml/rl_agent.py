@@ -182,6 +182,7 @@ class InterventionAgent:
         - Risk reduction (primary goal)
         - Treatment cost (penalize expensive interventions)
         - Quality of life (penalize intensive treatments)
+        - Clinical appropriateness (guideline-based treatment incentives)
 
         Args:
             current_risk: Current risk score (0-100%)
@@ -195,13 +196,47 @@ class InterventionAgent:
         risk_reduction = current_risk - next_risk
 
         # Cost penalty (penalize more expensive treatments)
-        cost_penalty = action * 0.1  # Linear cost increase with action intensity
+        cost_penalty = action * 0.08  # Reduced from 0.1 to encourage intervention
 
         # Quality of life penalty (intensive treatments reduce QoL)
-        qol_penalty = (action**2) * 0.05  # Quadratic penalty for intensive treatments
+        qol_penalty = (action**2) * 0.03  # Reduced from 0.05 to encourage intervention
+
+        # Clinical appropriateness bonus - reward guideline-concordant care
+        appropriateness_bonus = 0.0
+
+        # High risk patients (≥70%) should receive treatment
+        if current_risk >= 70:
+            if action == 0:  # Monitor only is inappropriate for high risk
+                appropriateness_bonus = -2.0  # Strong penalty
+            elif action == 1:  # Lifestyle alone is marginal for high risk
+                appropriateness_bonus = -0.5
+            elif action == 2:  # Single med is reasonable
+                appropriateness_bonus = 0.5
+            elif action >= 3:  # Combo/intensive is appropriate
+                appropriateness_bonus = 1.5
+
+        # Medium risk patients (30-70%) benefit from intervention
+        elif current_risk >= 30:
+            if action == 0:  # Monitor only is suboptimal
+                appropriateness_bonus = -0.5
+            elif action == 1:  # Lifestyle is appropriate
+                appropriateness_bonus = 1.0
+            elif action == 2:  # Single med is appropriate
+                appropriateness_bonus = 1.0
+            elif action >= 3:  # Combo/intensive may be excessive
+                appropriateness_bonus = 0.0
+
+        # Low risk patients (<30%) don't need intensive treatment
+        else:
+            if action == 0:  # Monitor only is appropriate
+                appropriateness_bonus = 0.5
+            elif action == 1:  # Lifestyle is appropriate
+                appropriateness_bonus = 0.5
+            elif action >= 2:  # Medication may be excessive
+                appropriateness_bonus = -0.5
 
         # Combined reward
-        reward = risk_reduction - cost_penalty - qol_penalty
+        reward = risk_reduction + appropriateness_bonus - cost_penalty - qol_penalty
 
         return reward
 
