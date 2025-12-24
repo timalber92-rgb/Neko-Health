@@ -9,6 +9,11 @@
 [![React 18](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+[![Backend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml)
+[![CI/CD Pipeline](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml)
+
 ## Overview
 
 **HealthGuard** is a full-stack machine learning application that demonstrates how predictive maintenance principles can be applied to preventive healthcare. Just as industrial ML predicts equipment failures 30 days in advance, HealthGuard predicts cardiovascular disease risk years ahead and recommends optimal intervention strategies.
@@ -37,6 +42,8 @@ This project was developed as a portfolio piece for a Senior Data Scientist appl
 - [Technical Decisions](#technical-decisions)
 - [Future Work](#future-work)
 - [Connection to Neko Health](#connection-to-neko-health)
+- [Dataset](#dataset)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -289,23 +296,21 @@ Frontend will be available at [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🚀 Quick Start (Staging Environment)
-
-**Want to test with security enabled?** Your staging environment is already configured!
+## 🚀 Quick Start
 
 ```bash
-# The .env files are already set up with:
-# ✅ API key authentication enabled
-# ✅ CORS configured for localhost
-# ✅ Rate limiting active
-# ✅ Secure API keys generated
+# Terminal 1: Start backend
+cd backend
+python -m uvicorn api.main:app --reload
 
-# Just start the servers:
-cd backend && python -m uvicorn api.main:app --reload
-cd frontend && npm run dev  # in a new terminal
+# Terminal 2: Start frontend (in new terminal)
+cd frontend
+npm run dev
 ```
 
-See [QUICK_START.md](QUICK_START.md) for details or [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for production deployment.
+Open [http://localhost:5173](http://localhost:5173) to use the application.
+
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup or [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for production deployment.
 
 ---
 
@@ -431,15 +436,24 @@ healthguard/
 │   └── vite.config.js
 │
 ├── docs/
-│   ├── IMPLEMENTATION_PLAN.md   # Detailed implementation plan
-│   └── DEPLOYMENT.md            # Deployment guide
+│   ├── DEPLOYMENT_GUIDE.md              # Production deployment guide
+│   ├── SECURITY_SETUP.md                 # Security configuration
+│   ├── PHASE1_SECURITY_IMPLEMENTATION.md # Security implementation details
+│   ├── IMPLEMENTATION_PLAN.md            # Detailed implementation plan
+│   └── REFACTORING_ANALYSIS.md          # Future improvements
 │
 ├── .devcontainer/
 │   └── devcontainer.json        # VSCode DevContainer config
 │
 ├── .gitignore
+├── docker-compose.yml            # Local development setup
+├── docker-compose.prod.yml       # Production Docker setup
+├── Dockerfile                    # Docker container config
+├── render.yaml                   # Render.com deployment config
+├── vercel.json                   # Vercel deployment config
+├── test_staging.sh               # Automated testing script
 ├── README.md                     # This file
-└── QUICKSTART.md                # Quick start guide
+└── QUICKSTART.md                 # Quick start guide
 ```
 
 ---
@@ -567,20 +581,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-## Citation
+## Data Citation
 
-If you use this code or approach in your research, please cite:
-
-```bibtex
-@software{healthguard2024,
-  author = {[Your Name]},
-  title = {HealthGuard: Predictive Maintenance for Preventive Healthcare},
-  year = {2024},
-  url = {https://github.com/[your-username]/healthguard}
-}
-```
-
-**Data Citation**:
+UCI Heart Disease Dataset:
 ```bibtex
 @misc{uci_heart_disease,
   author = {Detrano, R. and Janosi, A. and Steinbrunn, W. and Pfisterer, M. and Schmid, J.},
@@ -593,16 +596,14 @@ If you use this code or approach in your research, please cite:
 
 ---
 
-## Contact
+## Contributing
 
-**Project Author**: [Your Name]
-**Email**: [your.email@example.com]
-**LinkedIn**: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
-**Portfolio**: [yourportfolio.com](https://yourportfolio.com)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution guidelines.
 
-**Target Role**: Senior Data Scientist at Neko Health
-**Portfolio Goal**: Demonstrate ML expertise transitioning from industrial predictive maintenance to preventive healthcare
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-**Built with ❤️ for the future of preventive healthcare**
+**Built for demonstrating ML expertise in preventive healthcare**

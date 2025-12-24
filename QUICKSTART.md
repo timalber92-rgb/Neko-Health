@@ -1,12 +1,10 @@
-# HealthGuard Quick Start Guide
+# HealthGuard Quick Start
 
-Get your HealthGuard application running in minutes!
+Get HealthGuard running locally in 5 minutes.
 
 ---
 
-## 🚀 Run Staging Environment Locally
-
-Your staging environment is **already configured** with API key authentication enabled.
+## 🚀 Local Development Setup
 
 ### 1. Start Backend
 
@@ -84,50 +82,13 @@ lW_7ovNwk0U2uJSZxt5nLVM8fFHbJOjI2MLazoMxOF8
 
 ---
 
-## 🌍 Deploy to Production
+## 🌍 Production Deployment
 
-Ready to deploy? Follow these steps:
+For production deployment instructions, see [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md).
 
-### Step 1: Choose Hosting Platforms
-
-**Recommended (100% Free)**:
-- **Backend**: [Render.com](https://render.com) - Deploy backend API
-- **Frontend**: [Vercel.com](https://vercel.com) - Deploy React frontend
-
-See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for detailed instructions.
-
-### Step 2: Get Your URLs
-
-After deploying, you'll get:
-- Backend URL: `https://your-app.onrender.com`
-- Frontend URL: `https://your-app.vercel.app`
-
-### Step 3: Update Environment Variables
-
-**Backend** (in Render.com dashboard or `.env.production`):
-```bash
-ENVIRONMENT=production
-API_KEY_ENABLED=true
-API_KEYS=xZ5zu3IzfOXdFnaxagjUpenlZxPNrmPu7qpY_Wj2xtw,lW_7ovNwk0U2uJSZxt5nLVM8fFHbJOjI2MLazoMxOF8
-CORS_ORIGINS=https://your-app.vercel.app
-RATE_LIMIT_ENABLED=true
-```
-
-**Frontend** (in Vercel dashboard or `.env.production`):
-```bash
-VITE_API_URL=https://your-app.onrender.com
-VITE_API_KEY=xZ5zu3IzfOXdFnaxagjUpenlZxPNrmPu7qpY_Wj2xtw
-```
-
-### Step 4: Deploy!
-
-Most platforms auto-deploy when you push to GitHub:
-
-```bash
-git add .
-git commit -m "Ready for production deployment"
-git push origin main
-```
+**Free hosting options**:
+- **Backend**: Render.com
+- **Frontend**: Vercel
 
 ---
 
@@ -155,11 +116,11 @@ Your project is configured with **three environments**:
 
 ---
 
-## 📚 Documentation
+## 📚 More Documentation
 
-- **[DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)** - Complete deployment guide with free hosting options
-- **[SECURITY_SETUP.md](docs/SECURITY_SETUP.md)** - Security configuration details
-- **[PHASE1_SECURITY_IMPLEMENTATION.md](docs/PHASE1_SECURITY_IMPLEMENTATION.md)** - Security implementation details
+- [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) - Production deployment
+- [docs/SECURITY_SETUP.md](docs/SECURITY_SETUP.md) - Security configuration
+- [README.md](README.md) - Full project documentation
 
 ---
 
@@ -202,33 +163,4 @@ Just run the commands above and you're good to go!
 
 ---
 
-## 📈 Next Steps (Optional)
-
-After testing locally:
-
-1. **Deploy to free hosting** - See [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)
-2. **Get a custom domain** - Optional but professional
-3. **Set up monitoring** - Use UptimeRobot (free)
-4. **Add analytics** - Track usage with Google Analytics
-5. **Implement user auth** - Future enhancement (Phase 2)
-
----
-
-## 💡 Pro Tips
-
-- **Environment switching**: Just copy different `.env.*` files to `.env`
-- **API key rotation**: Generate new keys every 90 days for security
-- **Free hosting works great**: Render + Vercel is perfect for this app
-- **Monitor your logs**: Check hosting dashboards regularly
-
----
-
-## 🎯 Ready to Launch?
-
-1. ✅ Test locally (you're here!)
-2. ⏭️ Choose hosting platforms
-3. ⏭️ Deploy to staging
-4. ⏭️ Test in production
-5. ⏭️ Share with the world!
-
-**You're all set! Start the servers and see your app in action!** 🚀
+**Ready to deploy?** See [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for production deployment instructions.

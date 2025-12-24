@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/TimAlbert92/Neko-Health/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Security Issue
+    url: https://github.com/TimAlbert92/Neko-Health/security/advisories/new
+    about: Report a security vulnerability privately
