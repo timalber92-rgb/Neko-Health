@@ -12,6 +12,12 @@ build/
 *.pkl
 *.joblib
 
+# Testing
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+
 # Data
 backend/data/raw/*.csv
 backend/data/processed/*.csv
