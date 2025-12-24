@@ -15,6 +15,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // API Key from environment (for authenticated requests)
 const API_KEY = import.meta.env.VITE_API_KEY;
 
+// Debug logging
+console.log('🔧 API Configuration:', {
+  baseURL: API_BASE_URL,
+  hasApiKey: !!API_KEY,
+  mode: import.meta.env.MODE,
+  allEnvVars: import.meta.env
+});
+
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
