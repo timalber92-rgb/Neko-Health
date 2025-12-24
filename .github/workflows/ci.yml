@@ -65,7 +65,7 @@ jobs:
         python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 > /tmp/backend.log 2>&1 &
         echo $! > /tmp/backend.pid
       env:
-        ENVIRONMENT: test
+        ENVIRONMENT: development
 
     - name: Wait for backend and test health
       run: |
