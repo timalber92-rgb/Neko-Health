@@ -44,15 +44,9 @@ class TestHealthyPatientInterventions:
         modified = apply_intervention_effects(healthy_patient, action=1)
 
         # For healthy patients with optimal metrics, changes should be minimal or none
-        assert modified["trestbps"].iloc[0] == pytest.approx(
-            healthy_patient["trestbps"].iloc[0], abs=1
-        )
-        assert modified["chol"].iloc[0] == pytest.approx(
-            healthy_patient["chol"].iloc[0], abs=1
-        )
-        assert modified["thalach"].iloc[0] == pytest.approx(
-            healthy_patient["thalach"].iloc[0], abs=1
-        )
+        assert modified["trestbps"].iloc[0] == pytest.approx(healthy_patient["trestbps"].iloc[0], abs=1)
+        assert modified["chol"].iloc[0] == pytest.approx(healthy_patient["chol"].iloc[0], abs=1)
+        assert modified["thalach"].iloc[0] == pytest.approx(healthy_patient["thalach"].iloc[0], abs=1)
 
     def test_monitor_only_no_changes(self, healthy_patient):
         """Test that monitor only action makes no changes"""
@@ -114,19 +108,11 @@ class TestUnhealthyPatientInterventions:
         intensive = apply_intervention_effects(unhealthy_patient, action=4)
 
         # Intensive should have greater reductions
-        bp_reduction_lifestyle = (
-            unhealthy_patient["trestbps"].iloc[0] - lifestyle["trestbps"].iloc[0]
-        )
-        bp_reduction_intensive = (
-            unhealthy_patient["trestbps"].iloc[0] - intensive["trestbps"].iloc[0]
-        )
+        bp_reduction_lifestyle = unhealthy_patient["trestbps"].iloc[0] - lifestyle["trestbps"].iloc[0]
+        bp_reduction_intensive = unhealthy_patient["trestbps"].iloc[0] - intensive["trestbps"].iloc[0]
 
-        chol_reduction_lifestyle = (
-            unhealthy_patient["chol"].iloc[0] - lifestyle["chol"].iloc[0]
-        )
-        chol_reduction_intensive = (
-            unhealthy_patient["chol"].iloc[0] - intensive["chol"].iloc[0]
-        )
+        chol_reduction_lifestyle = unhealthy_patient["chol"].iloc[0] - lifestyle["chol"].iloc[0]
+        chol_reduction_intensive = unhealthy_patient["chol"].iloc[0] - intensive["chol"].iloc[0]
 
         assert bp_reduction_intensive > bp_reduction_lifestyle
         assert chol_reduction_intensive > chol_reduction_lifestyle
