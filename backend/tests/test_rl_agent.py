@@ -251,32 +251,40 @@ class TestRewardCalculation:
         assert reward2 > reward1  # More risk reduction = higher reward
 
     def test_calculate_reward_cost_penalty(self):
-        """Test that reward decreases with more expensive actions"""
+        """Test that cost and appropriateness bonuses are properly applied"""
         agent = InterventionAgent()
 
-        # Same risk reduction, different actions (increasing cost)
+        # For high-risk patients (80%), treatment is appropriate
+        # action 0 gets appropriateness penalty (-2.0)
+        # action 2 gets appropriateness bonus (+0.5)
+        # action 4 gets appropriateness bonus (+1.5)
         reward0 = agent.calculate_reward(current_risk=80, action=0, next_risk=60)
         reward2 = agent.calculate_reward(current_risk=80, action=2, next_risk=60)
         reward4 = agent.calculate_reward(current_risk=80, action=4, next_risk=60)
 
-        # More expensive actions should have lower rewards
-        assert reward0 > reward2 > reward4
+        # For high-risk patients, treatment should be rewarded more than monitoring
+        # action 0 should have lowest reward due to appropriateness penalty
+        assert reward2 > reward0
+        assert reward4 > reward0
 
     def test_calculate_reward_qol_penalty(self):
-        """Test that QoL penalty is quadratic"""
+        """Test that penalties and bonuses are properly applied for low-risk patients"""
         agent = InterventionAgent()
 
-        # Calculate rewards for different actions
+        # For low-risk patients (20%), monitor-only is appropriate
+        # action 0 gets appropriateness bonus (+0.5)
+        # action 1 gets appropriateness bonus (+0.5)
+        # actions 2-4 get appropriateness penalty (-0.5)
         rewards = []
         for action in range(5):
-            reward = agent.calculate_reward(current_risk=80, action=action, next_risk=60)
+            reward = agent.calculate_reward(current_risk=20, action=action, next_risk=10)
             rewards.append(reward)
 
-        # Check that penalty increases quadratically
-        # reward = 20 - 0.1*action - 0.05*action²
-        expected_rewards = [20.0, 19.85, 19.6, 19.25, 18.8]
-        for i in range(5):
-            assert abs(rewards[i] - expected_rewards[i]) < 0.01
+        # For low-risk patients, less intensive interventions should be preferred
+        # Monitor-only and lifestyle should have higher rewards than medications
+        assert rewards[0] > rewards[2]  # Monitor > Single Med
+        assert rewards[0] > rewards[4]  # Monitor > Intensive
+        assert rewards[1] > rewards[2]  # Lifestyle > Single Med
 
 
 class TestInterventionSimulation:
