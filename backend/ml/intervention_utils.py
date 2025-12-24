@@ -13,10 +13,10 @@ import pandas as pd
 
 # Clinical bounds for health metrics (based on medical guidelines)
 METRIC_BOUNDS = {
-    "trestbps": {"min": 90, "max": 200, "optimal": 120, "target": 120},
-    "chol": {"min": 120, "max": 400, "optimal": 200, "target": 200},
-    "thalach": {"min": 60, "max": 220, "optimal": 150, "target": 150},
-    "oldpeak": {"min": 0.0, "max": 6.0, "optimal": 0.0, "target": 1.0},
+    "trestbps": {"min": 90, "max": 200, "optimal": 110, "target": 130},  # Optimal: <120, Target: <130
+    "chol": {"min": 120, "max": 400, "optimal": 180, "target": 220},  # Optimal: <200, Target: <240
+    "thalach": {"min": 60, "max": 220, "optimal": 160, "target": 140},  # Higher is better for max HR
+    "oldpeak": {"min": 0.0, "max": 6.0, "optimal": 0.0, "target": 0.5},  # Lower is better (no ST depression)
 }
 
 
@@ -178,13 +178,13 @@ def apply_intervention_effects(patient_data: pd.DataFrame, action: int) -> pd.Da
             "trestbps": 0.95,  # 5% reduction
             "chol": 0.90,  # 10% reduction
             "thalach": 1.05,  # 5% increase
-            "oldpeak": 1.0,  # No change
+            "oldpeak": 0.95,  # 5% reduction (lifestyle improves ECG)
         },
         2: {  # Single Medication
             "trestbps": 0.90,  # 10% reduction
             "chol": 0.85,  # 15% reduction
             "thalach": 1.0,  # No change
-            "oldpeak": 1.0,  # No change
+            "oldpeak": 0.92,  # 8% reduction (meds improve cardiac function)
         },
         3: {  # Combination Therapy
             "trestbps": 0.85,  # 15% reduction
@@ -232,30 +232,31 @@ def ensure_risk_monotonicity(
     current_risk: float, new_risk: float, current_metrics: Dict[str, float], optimized_metrics: Dict[str, float], action: int
 ) -> tuple[float, Dict[str, float]]:
     """
-    Ensure that interventions never increase risk for healthy patients.
+    Ensure that interventions never paradoxically increase risk.
 
-    If an intervention would increase risk for a low-risk patient,
-    this function returns the original metrics unchanged.
+    If an intervention would increase risk (except for monitor-only),
+    this function returns the original metrics unchanged to prevent
+    paradoxical outcomes where improving health metrics worsens predictions.
 
     Args:
         current_risk: Current risk score (0-100)
         new_risk: Predicted risk after intervention
         current_metrics: Original patient metrics
         optimized_metrics: Modified metrics after intervention
-        action: Intervention action applied
+        action: Intervention action applied (0=monitor, 1-4=interventions)
 
     Returns:
         Tuple of (final_risk, final_metrics) with monotonicity enforced
     """
-    # For low-risk patients (< 30%), never allow risk to increase
-    if current_risk < 30.0 and new_risk > current_risk:
+    # For monitor-only (action 0), always return the current state unchanged
+    if action == 0:
         return current_risk, current_metrics
 
-    # For medium-risk patients (30-70%), allow small increases (up to 2%)
-    # due to measurement noise, but cap larger increases
-    if 30.0 <= current_risk < 70.0 and new_risk > current_risk + 2.0:
+    # For all interventions (actions 1-4), never allow risk to increase
+    # This prevents paradoxical outcomes where improving BP/cholesterol increases risk
+    # due to model artifacts or training data biases
+    if new_risk > current_risk:
         return current_risk, current_metrics
 
-    # For high-risk patients, allow the intervention effect
-    # (they need treatment even if imperfect)
+    # If intervention successfully reduces risk, use the optimized metrics
     return new_risk, optimized_metrics
