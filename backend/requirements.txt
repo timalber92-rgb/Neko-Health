@@ -13,7 +13,7 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 
 # File handling
-python-multipart==0.0.6
+python-multipart==0.0.18
 
 # Visualization (for notebooks and analysis)
 matplotlib==3.10.8
