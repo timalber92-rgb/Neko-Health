@@ -136,6 +136,7 @@ function QValueChart({ qValues }) {
 export default function RecommendationPanel({ recommendation, patientData }) {
   const [simulation, setSimulation] = useState(null);
   const [simulatingAction, setSimulatingAction] = useState(null);
+  const [simulatedActionId, setSimulatedActionId] = useState(null);
   const [error, setError] = useState(null);
 
   if (!recommendation) return null;
@@ -161,6 +162,7 @@ export default function RecommendationPanel({ recommendation, patientData }) {
     try {
       const result = await simulateIntervention(patientData, actionId);
       setSimulation(result);
+      setSimulatedActionId(actionId); // Track which action was simulated
     } catch (err) {
       setError(err.message);
       console.error('Simulation failed:', err);
@@ -224,27 +226,47 @@ export default function RecommendationPanel({ recommendation, patientData }) {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {ACTIONS.map((act) => (
-            <button
-              key={act.id}
-              onClick={() => handleSimulate(act.id)}
-              disabled={simulatingAction !== null}
-              className={`p-4 rounded-lg border-2 transition-all text-left ${
-                act.id === action
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50'
-              } ${simulatingAction === act.id ? 'opacity-50 cursor-wait' : ''}`}
-            >
-              <div className="flex items-center mb-2">
-                <span className="text-2xl mr-2">{act.icon}</span>
-                <span className="font-semibold text-gray-800 text-sm">{act.name}</span>
-              </div>
-              <p className="text-xs text-gray-600">{act.description}</p>
-              {simulatingAction === act.id && (
-                <div className="mt-2 text-xs text-primary-600">Simulating...</div>
-              )}
-            </button>
-          ))}
+          {ACTIONS.map((act) => {
+            const isRecommended = act.id === action;
+            const isSimulated = act.id === simulatedActionId;
+            const isSimulating = act.id === simulatingAction;
+
+            return (
+              <button
+                key={act.id}
+                onClick={() => handleSimulate(act.id)}
+                disabled={simulatingAction !== null}
+                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                  isSimulated
+                    ? 'border-green-500 bg-green-50 ring-2 ring-green-300'
+                    : isRecommended
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50'
+                } ${isSimulating ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <span className="text-2xl mr-2">{act.icon}</span>
+                    <span className="font-semibold text-gray-800 text-sm">{act.name}</span>
+                  </div>
+                  {isSimulated && !isSimulating && (
+                    <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
+                      Viewing
+                    </span>
+                  )}
+                  {isRecommended && !isSimulated && (
+                    <span className="text-xs font-semibold text-primary-600 bg-primary-100 px-2 py-1 rounded">
+                      AI Recommended
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600">{act.description}</p>
+                {isSimulating && (
+                  <div className="mt-2 text-xs text-primary-600 font-semibold">Simulating...</div>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -255,7 +277,17 @@ export default function RecommendationPanel({ recommendation, patientData }) {
         </div>
       )}
 
-      {simulation && <MetricComparison simulation={simulation} />}
+      {simulation && simulatedActionId !== null && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-lg font-semibold text-gray-800">
+              Simulation Results: {ACTIONS[simulatedActionId].name}
+            </h4>
+            <span className="text-sm text-gray-600">{ACTIONS[simulatedActionId].icon}</span>
+          </div>
+          <MetricComparison simulation={simulation} />
+        </div>
+      )}
 
       {/* Information Box */}
       <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
