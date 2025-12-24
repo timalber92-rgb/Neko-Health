@@ -12,11 +12,16 @@ import axios from 'axios';
 // Base URL for API - uses Vite proxy in development
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+// API Key from environment (for authenticated requests)
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 // Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    // Include API key if available (for staging/production)
+    ...(API_KEY && { 'X-API-Key': API_KEY }),
   },
   timeout: 10000, // 10 second timeout
 });

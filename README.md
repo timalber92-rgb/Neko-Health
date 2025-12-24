@@ -289,6 +289,26 @@ Frontend will be available at [http://localhost:3000](http://localhost:3000)
 
 ---
 
+## 🚀 Quick Start (Staging Environment)
+
+**Want to test with security enabled?** Your staging environment is already configured!
+
+```bash
+# The .env files are already set up with:
+# ✅ API key authentication enabled
+# ✅ CORS configured for localhost
+# ✅ Rate limiting active
+# ✅ Secure API keys generated
+
+# Just start the servers:
+cd backend && python -m uvicorn api.main:app --reload
+cd frontend && npm run dev  # in a new terminal
+```
+
+See [QUICK_START.md](QUICK_START.md) for details or [DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for production deployment.
+
+---
+
 ## Usage
 
 ### 1. Start Backend and Frontend
