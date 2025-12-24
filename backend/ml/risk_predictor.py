@@ -11,17 +11,16 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import joblib
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     classification_report,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
 from sklearn.model_selection import cross_val_score
 
@@ -387,8 +386,8 @@ def main():
     4. Display feature importance
     5. Save trained model
     """
-    from pathlib import Path
     import sys
+    from pathlib import Path
 
     # Add parent directory to path for imports
     sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -427,7 +426,7 @@ def main():
 
     # Display feature importance
     logger.info("\n[5/5] Feature Importance Analysis...")
-    importance_df = predictor.get_feature_importance()
+    predictor.get_feature_importance()
 
     # Save model
     model_dir = Path(__file__).parent.parent / "models"
@@ -456,7 +455,7 @@ def main():
     logger.info(f"Actual: {'Disease' if actual_label == 1 else 'No Disease'}")
     logger.info(f"Predicted: {prediction['classification']}")
     logger.info(f"Risk Score: {prediction['risk_score']:.1f}%")
-    logger.info(f"Top 3 Risk Factors:")
+    logger.info("Top 3 Risk Factors:")
     importance_dict = prediction["feature_importance"]
     for i, (feature, importance) in enumerate(list(importance_dict.items())[:3], 1):
         logger.info(f"  {i}. {feature}: {importance:.4f}")

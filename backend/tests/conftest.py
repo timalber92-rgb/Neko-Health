@@ -5,9 +5,10 @@ This module provides common fixtures used across all test modules.
 """
 
 import os
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add backend directory to Python path
@@ -50,7 +51,7 @@ def authenticated_client():
     # Reload settings
     from api.config import Settings
 
-    test_settings = Settings()
+    Settings()
 
     with TestClient(app) as test_client:
         # Add API key to all requests

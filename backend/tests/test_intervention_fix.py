@@ -8,8 +8,9 @@ paradox works correctly by ensuring:
 3. State-dependent interventions are applied correctly
 """
 
-import pytest
 import pandas as pd
+import pytest
+
 from ml.intervention_utils import apply_intervention_effects
 
 

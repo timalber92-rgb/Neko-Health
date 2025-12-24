@@ -12,15 +12,15 @@ Tests cover:
 - Model persistence (save/load)
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import tempfile
 from collections import defaultdict
+from pathlib import Path
 
-from ml.rl_agent import InterventionAgent, ACTIONS
-from ml.risk_predictor import RiskPredictor
+import numpy as np
+import pandas as pd
+import pytest
+
+from ml.rl_agent import ACTIONS, InterventionAgent
 
 
 @pytest.fixture

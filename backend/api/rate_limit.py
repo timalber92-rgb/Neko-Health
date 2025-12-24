@@ -5,12 +5,13 @@ Provides simple in-memory rate limiting to protect against DoS attacks.
 For production with multiple instances, consider using Redis-backed rate limiting.
 """
 
-import time
-from typing import Dict, Tuple
-from collections import defaultdict
-from fastapi import Request, HTTPException, status
-from starlette.middleware.base import BaseHTTPMiddleware
 import logging
+import time
+from collections import defaultdict
+from typing import Dict, Tuple
+
+from fastapi import HTTPException, Request, status
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from api.config import get_settings
 

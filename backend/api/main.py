@@ -6,31 +6,28 @@ prediction and intervention recommendation using ML models.
 """
 
 import logging
-from pathlib import Path
-from typing import Dict
 from contextlib import asynccontextmanager
 
+import joblib
 import pandas as pd
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import joblib
 
+from api.auth import verify_api_key
+from api.config import get_settings
 from api.models import (
+    HealthCheckResponse,
+    HealthStatus,
+    InterventionRecommendation,
     PatientInput,
     RiskPrediction,
-    InterventionRecommendation,
     SimulationRequest,
-    HealthStatus,
-    ErrorResponse,
-    HealthCheckResponse,
 )
-from api.config import get_settings, Settings
-from api.auth import verify_api_key
 from api.rate_limit import RateLimitMiddleware
+from ml.intervention_utils import apply_intervention_effects, ensure_risk_monotonicity
 from ml.risk_predictor import RiskPredictor
 from ml.rl_agent import InterventionAgent
-from ml.intervention_utils import apply_intervention_effects, ensure_risk_monotonicity
 
 # Global model instances
 risk_predictor: RiskPredictor = None

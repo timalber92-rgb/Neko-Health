@@ -81,5 +81,4 @@ jobs:
     - name: Check formatting with Prettier
       run: |
         cd frontend
-        npx prettier --check "src/**/*.{js,jsx,ts,tsx,json,css,md}"
-      continue-on-error: true
+        npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,scss,md}"

@@ -7,13 +7,13 @@ patient trajectories to balance risk reduction, treatment costs, and quality of 
 """
 
 import logging
-from pathlib import Path
-from typing import Any, Dict, Tuple, Optional
 import pickle
+from collections import defaultdict
+from pathlib import Path
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from collections import defaultdict
 
 from .intervention_utils import apply_intervention_effects
 
@@ -446,8 +446,8 @@ def main():
     4. Test recommendations on sample patients
     5. Save trained agent
     """
-    from pathlib import Path
     import sys
+    from pathlib import Path
 
     # Add parent directory to path for imports
     sys.path.insert(0, str(Path(__file__).parent.parent))

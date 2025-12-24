@@ -8,8 +8,9 @@ Tests cover:
 - Unauthorized access
 """
 
-import pytest
 import os
+
+import pytest
 from fastapi.testclient import TestClient
 
 

@@ -7,9 +7,9 @@ This module provides smart intervention logic that:
 - Prevents normalization paradoxes for healthy patients
 """
 
-import pandas as pd
 from typing import Dict
 
+import pandas as pd
 
 # Clinical bounds for health metrics (based on medical guidelines)
 METRIC_BOUNDS = {
@@ -48,7 +48,6 @@ def calculate_adaptive_reduction(current_value: float, base_reduction: float, me
 
     optimal = bounds["optimal"]
     target = bounds["target"]
-    min_val = bounds["min"]
     max_val = bounds["max"]
 
     # For metrics that should be reduced (BP, cholesterol, oldpeak)

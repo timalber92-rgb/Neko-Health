@@ -370,7 +370,6 @@ class TestEndToEndWorkflow:
         simulation_request = {"patient": valid_patient_data, "action": recommendation["action"]}
         simulate_response = client.post("/api/simulate", json=simulation_request)
         assert simulate_response.status_code == 200
-        simulation = simulate_response.json()
 
         # Verify data consistency
         # Current risk in simulation should match prediction

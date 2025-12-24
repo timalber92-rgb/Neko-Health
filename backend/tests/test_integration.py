@@ -8,21 +8,21 @@ Tests the complete end-to-end workflow:
 - Full analysis pipeline (data → model → API → response)
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from pathlib import Path
 import sys
 import tempfile
+from pathlib import Path
+
+import pytest
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from fastapi.testclient import TestClient
+
+from api.main import app
 from data.load import load_processed_data
 from ml.risk_predictor import RiskPredictor
 from ml.rl_agent import InterventionAgent
-from fastapi.testclient import TestClient
-from api.main import app
 
 
 @pytest.fixture(scope="module")

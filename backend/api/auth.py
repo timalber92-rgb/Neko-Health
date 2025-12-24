@@ -5,8 +5,10 @@ Provides API key-based authentication for securing endpoints.
 """
 
 from typing import Optional
+
 from fastapi import HTTPException, Security, status
 from fastapi.security import APIKeyHeader
+
 from api.config import get_settings
 
 # API Key header scheme

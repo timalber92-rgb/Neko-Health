@@ -6,7 +6,8 @@ All models use Pydantic for automatic validation and serialization.
 """
 
 from typing import Dict, Optional
-from pydantic import BaseModel, Field, field_validator
+
+from pydantic import BaseModel, Field
 
 
 class PatientInput(BaseModel):
