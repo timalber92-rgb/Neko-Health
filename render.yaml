@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: healthguard-api
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && python -m uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: API_KEY_ENABLED
+        value: true
+      - key: API_KEYS
+        sync: false  # This will need to be set manually in Render dashboard
+      - key: CORS_ORIGINS
+        sync: false  # This will need to be updated with your Vercel URL
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_REQUESTS
+        value: 100
+      - key: LOG_LEVEL
+        value: INFO
+      - key: DEBUG
+        value: false
