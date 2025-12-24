@@ -305,36 +305,68 @@ async def simulate_intervention(request: SimulationRequest):
         )
 
     try:
-        # Normalize patient data
+        # Convert patient data to DataFrame (raw values)
+        patient_dict = request.patient.model_dump()
+        patient_df = pd.DataFrame([patient_dict])
+
+        # Normalize for model prediction
         patient_normalized = normalize_patient_data(request.patient)
 
         # Get current risk
         current_prediction = risk_predictor.predict(patient_normalized)
         current_risk = current_prediction['risk_score']
 
-        # Simulate intervention effect
-        modified_data = intervention_agent.simulate_intervention_effect(
-            patient_normalized,
-            request.action
+        # Apply intervention effects to RAW values (not normalized)
+        modified_raw = patient_df.copy()
+
+        if request.action == 0:  # Monitor Only
+            # No change in metrics
+            pass
+        elif request.action == 1:  # Lifestyle Intervention
+            # Modest improvements in modifiable factors
+            modified_raw['trestbps'] *= 0.95  # 5% BP reduction
+            modified_raw['chol'] *= 0.90  # 10% cholesterol reduction
+            modified_raw['thalach'] *= 1.05  # 5% improved max HR
+        elif request.action == 2:  # Single Medication
+            # Target specific risk factors
+            modified_raw['trestbps'] *= 0.90  # 10% BP reduction
+            modified_raw['chol'] *= 0.85  # 15% cholesterol reduction
+        elif request.action == 3:  # Combination Therapy
+            # Synergistic effects
+            modified_raw['trestbps'] *= 0.85  # 15% BP reduction
+            modified_raw['chol'] *= 0.80  # 20% cholesterol reduction
+            modified_raw['thalach'] *= 1.08  # 8% improved max HR
+            modified_raw['oldpeak'] *= 0.90  # 10% reduced ST depression
+        elif request.action == 4:  # Intensive Treatment
+            # Maximum intervention effects
+            modified_raw['trestbps'] *= 0.80  # 20% BP reduction
+            modified_raw['chol'] *= 0.75  # 25% cholesterol reduction
+            modified_raw['thalach'] *= 1.10  # 10% improved max HR
+            modified_raw['oldpeak'] *= 0.80  # 20% reduced ST depression
+
+        # Normalize modified data for prediction
+        modified_normalized = pd.DataFrame(
+            scaler.transform(modified_raw),
+            columns=modified_raw.columns
         )
 
-        # Get new risk
-        new_prediction = risk_predictor.predict(modified_data)
+        # Get new risk from modified data
+        new_prediction = risk_predictor.predict(modified_normalized)
         new_risk = new_prediction['risk_score']
 
-        # Extract key metrics for comparison
+        # Extract key metrics for comparison (RAW VALUES)
         current_metrics = {
-            'trestbps': float(patient_normalized['trestbps'].iloc[0]),
-            'chol': float(patient_normalized['chol'].iloc[0]),
-            'thalach': float(patient_normalized['thalach'].iloc[0]),
-            'oldpeak': float(patient_normalized['oldpeak'].iloc[0])
+            'trestbps': float(patient_df['trestbps'].iloc[0]),
+            'chol': float(patient_df['chol'].iloc[0]),
+            'thalach': float(patient_df['thalach'].iloc[0]),
+            'oldpeak': float(patient_df['oldpeak'].iloc[0])
         }
 
         optimized_metrics = {
-            'trestbps': float(modified_data['trestbps'].iloc[0]),
-            'chol': float(modified_data['chol'].iloc[0]),
-            'thalach': float(modified_data['thalach'].iloc[0]),
-            'oldpeak': float(modified_data['oldpeak'].iloc[0])
+            'trestbps': float(modified_raw['trestbps'].iloc[0]),
+            'chol': float(modified_raw['chol'].iloc[0]),
+            'thalach': float(modified_raw['thalach'].iloc[0]),
+            'oldpeak': float(modified_raw['oldpeak'].iloc[0])
         }
 
         result = HealthStatus(
