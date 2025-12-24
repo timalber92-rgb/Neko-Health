@@ -32,7 +32,7 @@ def valid_patient_data():
         "oldpeak": 2.3,
         "slope": 2,
         "ca": 0,
-        "thal": 6
+        "thal": 6,
     }
 
 
@@ -182,7 +182,7 @@ class TestRecommendEndpoint:
             "Lifestyle Intervention",
             "Single Medication",
             "Combination Therapy",
-            "Intensive Treatment"
+            "Intensive Treatment",
         ]
         assert data["action_name"] in action_names
 
@@ -222,10 +222,7 @@ class TestSimulateEndpoint:
 
     def test_simulate_success(self, client, valid_patient_data):
         """Test successful intervention simulation"""
-        simulation_request = {
-            "patient": valid_patient_data,
-            "action": 2  # Single Medication
-        }
+        simulation_request = {"patient": valid_patient_data, "action": 2}  # Single Medication
 
         response = client.post("/api/simulate", json=simulation_request)
 
@@ -240,10 +237,7 @@ class TestSimulateEndpoint:
 
     def test_simulate_response_structure(self, client, valid_patient_data):
         """Test simulation response structure"""
-        simulation_request = {
-            "patient": valid_patient_data,
-            "action": 1
-        }
+        simulation_request = {"patient": valid_patient_data, "action": 1}
 
         response = client.post("/api/simulate", json=simulation_request)
         data = response.json()
@@ -260,10 +254,7 @@ class TestSimulateEndpoint:
     def test_simulate_all_actions(self, client, valid_patient_data):
         """Test simulation with all intervention actions"""
         for action in range(5):
-            simulation_request = {
-                "patient": valid_patient_data,
-                "action": action
-            }
+            simulation_request = {"patient": valid_patient_data, "action": action}
 
             response = client.post("/api/simulate", json=simulation_request)
 
@@ -277,10 +268,7 @@ class TestSimulateEndpoint:
 
     def test_simulate_monitor_only(self, client, valid_patient_data):
         """Test simulation with Monitor Only action (no intervention)"""
-        simulation_request = {
-            "patient": valid_patient_data,
-            "action": 0  # Monitor Only
-        }
+        simulation_request = {"patient": valid_patient_data, "action": 0}  # Monitor Only
 
         response = client.post("/api/simulate", json=simulation_request)
         data = response.json()
@@ -292,10 +280,7 @@ class TestSimulateEndpoint:
 
     def test_simulate_invalid_action(self, client, valid_patient_data):
         """Test simulation with invalid action"""
-        simulation_request = {
-            "patient": valid_patient_data,
-            "action": 10  # Invalid action
-        }
+        simulation_request = {"patient": valid_patient_data, "action": 10}  # Invalid action
 
         response = client.post("/api/simulate", json=simulation_request)
 
@@ -307,10 +292,7 @@ class TestSimulateEndpoint:
         incomplete_patient = valid_patient_data.copy()
         del incomplete_patient["chol"]
 
-        simulation_request = {
-            "patient": incomplete_patient,
-            "action": 2
-        }
+        simulation_request = {"patient": incomplete_patient, "action": 2}
 
         response = client.post("/api/simulate", json=simulation_request)
 
@@ -336,11 +318,7 @@ class TestErrorHandling:
 
     def test_malformed_json(self, client):
         """Test request with malformed JSON"""
-        response = client.post(
-            "/api/predict",
-            data="not valid json",
-            headers={"Content-Type": "application/json"}
-        )
+        response = client.post("/api/predict", data="not valid json", headers={"Content-Type": "application/json"})
 
         assert response.status_code == 422
 
@@ -365,6 +343,7 @@ class TestCORS:
     def test_cors_configuration_loaded(self):
         """Test that CORS configuration is properly loaded from settings"""
         from api.config import get_settings
+
         settings = get_settings()
 
         # Verify CORS origins are configured
@@ -388,10 +367,7 @@ class TestEndToEndWorkflow:
         recommendation = recommend_response.json()
 
         # Step 3: Simulate the recommended intervention
-        simulation_request = {
-            "patient": valid_patient_data,
-            "action": recommendation["action"]
-        }
+        simulation_request = {"patient": valid_patient_data, "action": recommendation["action"]}
         simulate_response = client.post("/api/simulate", json=simulation_request)
         assert simulate_response.status_code == 200
         simulation = simulate_response.json()
@@ -405,16 +381,36 @@ class TestEndToEndWorkflow:
         patients = [
             # Low risk patient
             {
-                "age": 35.0, "sex": 0, "cp": 1, "trestbps": 120.0, "chol": 180.0,
-                "fbs": 0, "restecg": 0, "thalach": 170.0, "exang": 0,
-                "oldpeak": 0.0, "slope": 1, "ca": 0, "thal": 3
+                "age": 35.0,
+                "sex": 0,
+                "cp": 1,
+                "trestbps": 120.0,
+                "chol": 180.0,
+                "fbs": 0,
+                "restecg": 0,
+                "thalach": 170.0,
+                "exang": 0,
+                "oldpeak": 0.0,
+                "slope": 1,
+                "ca": 0,
+                "thal": 3,
             },
             # High risk patient
             {
-                "age": 70.0, "sex": 1, "cp": 4, "trestbps": 180.0, "chol": 300.0,
-                "fbs": 1, "restecg": 2, "thalach": 100.0, "exang": 1,
-                "oldpeak": 4.0, "slope": 3, "ca": 3, "thal": 7
-            }
+                "age": 70.0,
+                "sex": 1,
+                "cp": 4,
+                "trestbps": 180.0,
+                "chol": 300.0,
+                "fbs": 1,
+                "restecg": 2,
+                "thalach": 100.0,
+                "exang": 1,
+                "oldpeak": 4.0,
+                "slope": 3,
+                "ca": 3,
+                "thal": 7,
+            },
         ]
 
         results = []

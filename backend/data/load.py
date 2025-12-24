@@ -21,17 +21,26 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Constants
 DATA_URL = "https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data"
 FEATURE_NAMES = [
-    'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
-    'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target'
+    "age",
+    "sex",
+    "cp",
+    "trestbps",
+    "chol",
+    "fbs",
+    "restecg",
+    "thalach",
+    "exang",
+    "oldpeak",
+    "slope",
+    "ca",
+    "thal",
+    "target",
 ]
 
 # Determine the absolute path to the data directory
@@ -69,15 +78,10 @@ def download_data() -> Path:
             return RAW_DATA_PATH
 
         logger.info(f"Downloading data from {DATA_URL}")
-        urlretrieve(DATA_URL, RAW_DATA_PATH.with_suffix('.data'))
+        urlretrieve(DATA_URL, RAW_DATA_PATH.with_suffix(".data"))
 
         # Load the data and add column names
-        df = pd.read_csv(
-            RAW_DATA_PATH.with_suffix('.data'),
-            header=None,
-            names=FEATURE_NAMES,
-            na_values='?'
-        )
+        df = pd.read_csv(RAW_DATA_PATH.with_suffix(".data"), header=None, names=FEATURE_NAMES, na_values="?")
 
         # Save as CSV
         df.to_csv(RAW_DATA_PATH, index=False)
@@ -85,7 +89,7 @@ def download_data() -> Path:
         logger.info(f"Dataset shape: {df.shape}")
 
         # Clean up the .data file
-        RAW_DATA_PATH.with_suffix('.data').unlink()
+        RAW_DATA_PATH.with_suffix(".data").unlink()
 
         return RAW_DATA_PATH
 
@@ -117,9 +121,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("Input DataFrame is empty")
 
     if len(df.columns) != len(FEATURE_NAMES):
-        raise ValueError(
-            f"Expected {len(FEATURE_NAMES)} columns, got {len(df.columns)}"
-        )
+        raise ValueError(f"Expected {len(FEATURE_NAMES)} columns, got {len(df.columns)}")
 
     # Log initial data quality
     initial_missing = df.isnull().sum().sum()
@@ -135,30 +137,22 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
             missing_count = df_clean[col].isnull().sum()
             median_value = df_clean[col].median()
             df_clean[col].fillna(median_value, inplace=True)
-            logger.info(
-                f"Imputed {missing_count} missing values in '{col}' "
-                f"with median: {median_value:.2f}"
-            )
+            logger.info(f"Imputed {missing_count} missing values in '{col}' " f"with median: {median_value:.2f}")
 
     # Convert target to binary classification
     # Original: 0 = no disease, 1-4 = disease presence (severity levels)
     # New: 0 = no disease, 1 = disease present
-    df_clean['target'] = (df_clean['target'] > 0).astype(int)
-    logger.info(
-        f"Converted target to binary classification. "
-        f"Class distribution:\n{df_clean['target'].value_counts()}"
-    )
+    df_clean["target"] = (df_clean["target"] > 0).astype(int)
+    logger.info(f"Converted target to binary classification. " f"Class distribution:\n{df_clean['target'].value_counts()}")
 
     # Ensure all numeric columns are proper numeric types
     for col in df_clean.columns:
-        df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+        df_clean[col] = pd.to_numeric(df_clean[col], errors="coerce")
 
     # Final check for any remaining missing values
     final_missing = df_clean.isnull().sum().sum()
     if final_missing > 0:
-        logger.warning(
-            f"Still have {final_missing} missing values after cleaning"
-        )
+        logger.warning(f"Still have {final_missing} missing values after cleaning")
     else:
         logger.info("No missing values remaining after cleaning")
 
@@ -170,10 +164,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def preprocess_data(
-    df: pd.DataFrame,
-    test_size: float = 0.15,
-    val_size: float = 0.15,
-    random_state: int = 42
+    df: pd.DataFrame, test_size: float = 0.15, val_size: float = 0.15, random_state: int = 42
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, StandardScaler]:
     """
     Preprocess the cleaned data: normalize features and create train/val/test splits.
@@ -203,34 +194,23 @@ def preprocess_data(
     # Validate split sizes
     total_split = test_size + val_size
     if total_split >= 1.0:
-        raise ValueError(
-            f"test_size ({test_size}) + val_size ({val_size}) "
-            f"must be less than 1.0"
-        )
+        raise ValueError(f"test_size ({test_size}) + val_size ({val_size}) " f"must be less than 1.0")
 
     # Separate features and target
-    X = df.drop('target', axis=1)
-    y = df['target']
+    X = df.drop("target", axis=1)
+    y = df["target"]
 
     logger.info(f"Feature matrix shape: {X.shape}")
     logger.info(f"Target distribution: {y.value_counts().to_dict()}")
 
     # First split: separate test set
-    X_temp, X_test, y_temp, y_test = train_test_split(
-        X, y,
-        test_size=test_size,
-        random_state=random_state,
-        stratify=y
-    )
+    X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
 
     # Second split: separate validation from training
     # Adjust val_size to account for already-removed test set
     adjusted_val_size = val_size / (1 - test_size)
     X_train, X_val, y_train, y_val = train_test_split(
-        X_temp, y_temp,
-        test_size=adjusted_val_size,
-        random_state=random_state,
-        stratify=y_temp
+        X_temp, y_temp, test_size=adjusted_val_size, random_state=random_state, stratify=y_temp
     )
 
     logger.info(f"Train set size: {len(X_train)} ({len(X_train)/len(df)*100:.1f}%)")
@@ -238,15 +218,9 @@ def preprocess_data(
     logger.info(f"Test set size: {len(X_test)} ({len(X_test)/len(df)*100:.1f}%)")
 
     # Verify stratification worked
-    logger.info(
-        f"Train set class balance: {y_train.value_counts(normalize=True).to_dict()}"
-    )
-    logger.info(
-        f"Val set class balance: {y_val.value_counts(normalize=True).to_dict()}"
-    )
-    logger.info(
-        f"Test set class balance: {y_test.value_counts(normalize=True).to_dict()}"
-    )
+    logger.info(f"Train set class balance: {y_train.value_counts(normalize=True).to_dict()}")
+    logger.info(f"Val set class balance: {y_val.value_counts(normalize=True).to_dict()}")
+    logger.info(f"Test set class balance: {y_test.value_counts(normalize=True).to_dict()}")
 
     # Fit scaler on training data only (prevent data leakage)
     scaler = StandardScaler()
@@ -255,45 +229,25 @@ def preprocess_data(
     X_test_scaled = scaler.transform(X_test)
 
     logger.info("Features normalized using StandardScaler")
-    logger.info(
-        f"Example feature means after scaling: "
-        f"{X_train_scaled.mean(axis=0)[:3]}"
-    )
-    logger.info(
-        f"Example feature stds after scaling: "
-        f"{X_train_scaled.std(axis=0)[:3]}"
-    )
+    logger.info(f"Example feature means after scaling: " f"{X_train_scaled.mean(axis=0)[:3]}")
+    logger.info(f"Example feature stds after scaling: " f"{X_train_scaled.std(axis=0)[:3]}")
 
     # Convert back to DataFrames with original column names
-    train_df = pd.DataFrame(
-        X_train_scaled,
-        columns=X.columns
-    )
-    train_df['target'] = y_train.values
+    train_df = pd.DataFrame(X_train_scaled, columns=X.columns)
+    train_df["target"] = y_train.values
 
-    val_df = pd.DataFrame(
-        X_val_scaled,
-        columns=X.columns
-    )
-    val_df['target'] = y_val.values
+    val_df = pd.DataFrame(X_val_scaled, columns=X.columns)
+    val_df["target"] = y_val.values
 
-    test_df = pd.DataFrame(
-        X_test_scaled,
-        columns=X.columns
-    )
-    test_df['target'] = y_test.values
+    test_df = pd.DataFrame(X_test_scaled, columns=X.columns)
+    test_df["target"] = y_test.values
 
     logger.info("Preprocessing complete")
 
     return train_df, val_df, test_df, scaler
 
 
-def save_processed_data(
-    train_df: pd.DataFrame,
-    val_df: pd.DataFrame,
-    test_df: pd.DataFrame,
-    scaler: StandardScaler
-) -> None:
+def save_processed_data(train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame, scaler: StandardScaler) -> None:
     """
     Save processed datasets and scaler to disk.
 

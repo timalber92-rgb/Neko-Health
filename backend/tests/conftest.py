@@ -49,6 +49,7 @@ def authenticated_client():
 
     # Reload settings
     from api.config import Settings
+
     test_settings = Settings()
 
     with TestClient(app) as test_client:

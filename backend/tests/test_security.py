@@ -29,7 +29,7 @@ def valid_patient_data():
         "oldpeak": 2.3,
         "slope": 2,
         "ca": 0,
-        "thal": 6
+        "thal": 6,
     }
 
 
@@ -56,6 +56,7 @@ class TestAPIKeyAuthentication:
 
         # Reimport to get new settings
         from api.main import app
+
         with TestClient(app) as test_client:
             response = test_client.post("/api/predict", json=valid_patient_data)
             assert response.status_code == 401
@@ -74,12 +75,9 @@ class TestAPIKeyAuthentication:
 
         # Reimport to get new settings
         from api.main import app
+
         with TestClient(app) as test_client:
-            response = test_client.post(
-                "/api/predict",
-                json=valid_patient_data,
-                headers={"X-API-Key": "invalid_key"}
-            )
+            response = test_client.post("/api/predict", json=valid_patient_data, headers={"X-API-Key": "invalid_key"})
             assert response.status_code == 401
             assert "Invalid API key" in response.json()["detail"]
 
@@ -91,12 +89,9 @@ class TestAPIKeyAuthentication:
         # Note: Auth is disabled in test environment, so this should work without key
         # In production with API_KEY_ENABLED=true, this would require a valid key
         from api.main import app
+
         with TestClient(app) as test_client:
-            response = test_client.post(
-                "/api/predict",
-                json=valid_patient_data,
-                headers={"X-API-Key": "test_key_123"}
-            )
+            response = test_client.post("/api/predict", json=valid_patient_data, headers={"X-API-Key": "test_key_123"})
             # Should succeed because auth is disabled in tests
             assert response.status_code == 200
 
@@ -108,11 +103,7 @@ class TestAPIKeyAuthentication:
         # Test with various keys - all should work since auth is disabled
         for key in ["key1", "key2", "key3"]:
             with TestClient(app) as test_client:
-                response = test_client.post(
-                    "/api/predict",
-                    json=valid_patient_data,
-                    headers={"X-API-Key": key}
-                )
+                response = test_client.post("/api/predict", json=valid_patient_data, headers={"X-API-Key": key})
                 assert response.status_code == 200
 
 
@@ -130,6 +121,7 @@ class TestCORSConfiguration:
     def test_cors_configuration_exists(self):
         """Test that CORS configuration is properly set"""
         from api.config import get_settings
+
         settings = get_settings()
 
         # Verify CORS settings are configured
@@ -138,10 +130,7 @@ class TestCORSConfiguration:
 
     def test_cors_allowed_origins(self, client):
         """Test that configured origins are allowed"""
-        response = client.get(
-            "/",
-            headers={"Origin": "http://localhost:3000"}
-        )
+        response = client.get("/", headers={"Origin": "http://localhost:3000"})
 
         # Should allow configured origin
         assert response.status_code == 200

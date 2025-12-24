@@ -21,15 +21,12 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
     classification_report,
-    confusion_matrix
+    confusion_matrix,
 )
 from sklearn.model_selection import cross_val_score
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -66,21 +63,12 @@ class RiskPredictor:
             max_depth=10,  # Prevent overfitting on small dataset
             min_samples_split=5,  # Require at least 5 samples to split
             min_samples_leaf=2,  # Require at least 2 samples in leaf
-            class_weight='balanced'  # Handle class imbalance
+            class_weight="balanced",  # Handle class imbalance
         )
         self.feature_names: Optional[list] = None
-        logger.info(
-            f"Initialized RiskPredictor with {n_estimators} estimators, "
-            f"random_state={random_state}"
-        )
+        logger.info(f"Initialized RiskPredictor with {n_estimators} estimators, " f"random_state={random_state}")
 
-    def train(
-        self,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-        X_val: pd.DataFrame,
-        y_val: pd.Series
-    ) -> Dict[str, float]:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series, X_val: pd.DataFrame, y_val: pd.Series) -> Dict[str, float]:
         """
         Train the Random Forest model with cross-validation.
 
@@ -110,15 +98,9 @@ class RiskPredictor:
 
         # Validate inputs
         if len(X_train) != len(y_train):
-            raise ValueError(
-                f"X_train ({len(X_train)}) and y_train ({len(y_train)}) "
-                f"must have same length"
-            )
+            raise ValueError(f"X_train ({len(X_train)}) and y_train ({len(y_train)}) " f"must have same length")
         if len(X_val) != len(y_val):
-            raise ValueError(
-                f"X_val ({len(X_val)}) and y_val ({len(y_val)}) "
-                f"must have same length"
-            )
+            raise ValueError(f"X_val ({len(X_val)}) and y_val ({len(y_val)}) " f"must have same length")
 
         # Store feature names for later use
         self.feature_names = list(X_train.columns)
@@ -127,18 +109,11 @@ class RiskPredictor:
         # Perform 5-fold cross-validation on training set
         logger.info("Performing 5-fold cross-validation...")
         cv_scores = cross_val_score(
-            self.model,
-            X_train,
-            y_train,
-            cv=5,
-            scoring='accuracy',
-            n_jobs=-1  # Use all available cores
+            self.model, X_train, y_train, cv=5, scoring="accuracy", n_jobs=-1  # Use all available cores
         )
         cv_mean = cv_scores.mean()
         cv_std = cv_scores.std()
-        logger.info(
-            f"Cross-validation accuracy: {cv_mean:.4f} (+/- {cv_std:.4f})"
-        )
+        logger.info(f"Cross-validation accuracy: {cv_mean:.4f} (+/- {cv_std:.4f})")
 
         # Train final model on full training set
         logger.info("Training final model on full training set...")
@@ -151,13 +126,13 @@ class RiskPredictor:
 
         # Calculate metrics
         metrics = {
-            'accuracy': accuracy_score(y_val, y_pred),
-            'precision': precision_score(y_val, y_pred, zero_division=0),
-            'recall': recall_score(y_val, y_pred, zero_division=0),
-            'f1': f1_score(y_val, y_pred, zero_division=0),
-            'roc_auc': roc_auc_score(y_val, y_pred_proba),
-            'cv_accuracy_mean': cv_mean,
-            'cv_accuracy_std': cv_std
+            "accuracy": accuracy_score(y_val, y_pred),
+            "precision": precision_score(y_val, y_pred, zero_division=0),
+            "recall": recall_score(y_val, y_pred, zero_division=0),
+            "f1": f1_score(y_val, y_pred, zero_division=0),
+            "roc_auc": roc_auc_score(y_val, y_pred_proba),
+            "cv_accuracy_mean": cv_mean,
+            "cv_accuracy_std": cv_std,
         }
 
         # Log detailed results
@@ -166,7 +141,7 @@ class RiskPredictor:
             logger.info(f"  {metric_name}: {value:.4f}")
 
         logger.info("\nClassification Report:")
-        logger.info("\n" + classification_report(y_val, y_pred, target_names=['No Disease', 'Disease']))
+        logger.info("\n" + classification_report(y_val, y_pred, target_names=["No Disease", "Disease"]))
 
         logger.info("\nConfusion Matrix:")
         cm = confusion_matrix(y_val, y_pred)
@@ -199,20 +174,15 @@ class RiskPredictor:
             ValueError: If model hasn't been trained or features don't match
             RuntimeError: If prediction fails
         """
-        if self.model is None or not hasattr(self.model, 'classes_'):
-            raise ValueError(
-                "Model has not been trained yet. Call train() first."
-            )
+        if self.model is None or not hasattr(self.model, "classes_"):
+            raise ValueError("Model has not been trained yet. Call train() first.")
 
         if self.feature_names is None:
             raise ValueError("Feature names not set. Model may not be trained properly.")
 
         # Validate feature names match
         if list(patient_data.columns) != self.feature_names:
-            raise ValueError(
-                f"Feature mismatch. Expected {self.feature_names}, "
-                f"got {list(patient_data.columns)}"
-            )
+            raise ValueError(f"Feature mismatch. Expected {self.feature_names}, " f"got {list(patient_data.columns)}")
 
         try:
             # Get prediction and probability
@@ -235,23 +205,17 @@ class RiskPredictor:
             feature_importance = self.get_feature_importance()
 
             # Convert feature importance to dict (feature -> importance)
-            importance_dict = dict(zip(
-                feature_importance['feature'].tolist(),
-                feature_importance['importance'].tolist()
-            ))
+            importance_dict = dict(zip(feature_importance["feature"].tolist(), feature_importance["importance"].tolist()))
 
             result = {
-                'risk_score': float(risk_score),
-                'has_disease': bool(prediction),
-                'classification': risk_class,
-                'probability': float(disease_proba),
-                'feature_importance': importance_dict
+                "risk_score": float(risk_score),
+                "has_disease": bool(prediction),
+                "classification": risk_class,
+                "probability": float(disease_proba),
+                "feature_importance": importance_dict,
             }
 
-            logger.info(
-                f"Prediction: {risk_class} ({risk_score:.1f}%), "
-                f"Disease: {bool(prediction)}"
-            )
+            logger.info(f"Prediction: {risk_class} ({risk_score:.1f}%), " f"Disease: {bool(prediction)}")
 
             return result
 
@@ -280,16 +244,11 @@ class RiskPredictor:
         Raises:
             ValueError: If model hasn't been trained or data is invalid
         """
-        if self.model is None or not hasattr(self.model, 'classes_'):
-            raise ValueError(
-                "Model has not been trained yet. Call train() first."
-            )
+        if self.model is None or not hasattr(self.model, "classes_"):
+            raise ValueError("Model has not been trained yet. Call train() first.")
 
         if len(X_test) != len(y_test):
-            raise ValueError(
-                f"X_test ({len(X_test)}) and y_test ({len(y_test)}) "
-                f"must have same length"
-            )
+            raise ValueError(f"X_test ({len(X_test)}) and y_test ({len(y_test)}) " f"must have same length")
 
         logger.info(f"Evaluating on test set ({len(X_test)} samples)...")
 
@@ -297,11 +256,11 @@ class RiskPredictor:
         y_pred_proba = self.model.predict_proba(X_test)[:, 1]
 
         metrics = {
-            'accuracy': accuracy_score(y_test, y_pred),
-            'precision': precision_score(y_test, y_pred, zero_division=0),
-            'recall': recall_score(y_test, y_pred, zero_division=0),
-            'f1': f1_score(y_test, y_pred, zero_division=0),
-            'roc_auc': roc_auc_score(y_test, y_pred_proba)
+            "accuracy": accuracy_score(y_test, y_pred),
+            "precision": precision_score(y_test, y_pred, zero_division=0),
+            "recall": recall_score(y_test, y_pred, zero_division=0),
+            "f1": f1_score(y_test, y_pred, zero_division=0),
+            "roc_auc": roc_auc_score(y_test, y_pred_proba),
         }
 
         logger.info("Test Set Metrics:")
@@ -309,7 +268,7 @@ class RiskPredictor:
             logger.info(f"  {metric_name}: {value:.4f}")
 
         logger.info("\nTest Set Classification Report:")
-        logger.info("\n" + classification_report(y_test, y_pred, target_names=['No Disease', 'Disease']))
+        logger.info("\n" + classification_report(y_test, y_pred, target_names=["No Disease", "Disease"]))
 
         logger.info("\nTest Set Confusion Matrix:")
         cm = confusion_matrix(y_test, y_pred)
@@ -332,10 +291,8 @@ class RiskPredictor:
         Raises:
             ValueError: If model hasn't been trained
         """
-        if self.model is None or not hasattr(self.model, 'feature_importances_'):
-            raise ValueError(
-                "Model has not been trained yet. Call train() first."
-            )
+        if self.model is None or not hasattr(self.model, "feature_importances_"):
+            raise ValueError("Model has not been trained yet. Call train() first.")
 
         if self.feature_names is None:
             raise ValueError("Feature names not set. Model may not be trained properly.")
@@ -344,10 +301,9 @@ class RiskPredictor:
         importances = self.model.feature_importances_
 
         # Create DataFrame and sort by importance
-        importance_df = pd.DataFrame({
-            'feature': self.feature_names,
-            'importance': importances
-        }).sort_values('importance', ascending=False)
+        importance_df = pd.DataFrame({"feature": self.feature_names, "importance": importances}).sort_values(
+            "importance", ascending=False
+        )
 
         logger.info("Feature Importance (top 5):")
         for idx, row in importance_df.head(5).iterrows():
@@ -368,18 +324,16 @@ class RiskPredictor:
             ValueError: If model hasn't been trained
             IOError: If file cannot be written
         """
-        if self.model is None or not hasattr(self.model, 'classes_'):
-            raise ValueError(
-                "Model has not been trained yet. Call train() first."
-            )
+        if self.model is None or not hasattr(self.model, "classes_"):
+            raise ValueError("Model has not been trained yet. Call train() first.")
 
         try:
             # Save model and metadata
             model_data = {
-                'model': self.model,
-                'feature_names': self.feature_names,
-                'n_estimators': self.n_estimators,
-                'random_state': self.random_state
+                "model": self.model,
+                "feature_names": self.feature_names,
+                "n_estimators": self.n_estimators,
+                "random_state": self.random_state,
             }
 
             joblib.dump(model_data, path)
@@ -409,10 +363,10 @@ class RiskPredictor:
             # Load model and metadata
             model_data = joblib.load(path)
 
-            self.model = model_data['model']
-            self.feature_names = model_data['feature_names']
-            self.n_estimators = model_data['n_estimators']
-            self.random_state = model_data['random_state']
+            self.model = model_data["model"]
+            self.feature_names = model_data["feature_names"]
+            self.n_estimators = model_data["n_estimators"]
+            self.random_state = model_data["random_state"]
 
             logger.info(f"Model loaded from {path}")
             logger.info(f"Features: {len(self.feature_names)}")
@@ -441,21 +395,21 @@ def main():
 
     from data.load import load_processed_data
 
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info("HealthGuard - Risk Predictor Training")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
     # Load data
     logger.info("\n[1/5] Loading processed data...")
     train_df, val_df, test_df, scaler = load_processed_data()
 
     # Separate features and targets
-    X_train = train_df.drop('target', axis=1)
-    y_train = train_df['target']
-    X_val = val_df.drop('target', axis=1)
-    y_val = val_df['target']
-    X_test = test_df.drop('target', axis=1)
-    y_test = test_df['target']
+    X_train = train_df.drop("target", axis=1)
+    y_train = train_df["target"]
+    X_val = val_df.drop("target", axis=1)
+    y_val = val_df["target"]
+    X_test = test_df.drop("target", axis=1)
+    y_test = test_df["target"]
 
     logger.info(f"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
 
@@ -482,15 +436,15 @@ def main():
     predictor.save(model_path)
 
     # Summary
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("TRAINING SUMMARY")
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info(f"Validation ROC-AUC: {val_metrics['roc_auc']:.4f}")
     logger.info(f"Test ROC-AUC: {test_metrics['roc_auc']:.4f}")
     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
     logger.info(f"Test F1 Score: {test_metrics['f1']:.4f}")
     logger.info(f"\nModel saved to: {model_path}")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
     # Demo prediction
     logger.info("\n[DEMO] Sample Prediction:")
@@ -503,7 +457,7 @@ def main():
     logger.info(f"Predicted: {prediction['classification']}")
     logger.info(f"Risk Score: {prediction['risk_score']:.1f}%")
     logger.info(f"Top 3 Risk Factors:")
-    importance_dict = prediction['feature_importance']
+    importance_dict = prediction["feature_importance"]
     for i, (feature, importance) in enumerate(list(importance_dict.items())[:3], 1):
         logger.info(f"  {i}. {feature}: {importance:.4f}")
 

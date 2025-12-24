@@ -71,10 +71,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # Clean up old entries
             for ip in list(self.request_counts.keys()):
-                self.request_counts[ip] = [
-                    (ts, count) for ts, count in self.request_counts[ip]
-                    if ts > cutoff_time
-                ]
+                self.request_counts[ip] = [(ts, count) for ts, count in self.request_counts[ip] if ts > cutoff_time]
                 # Remove IP if no recent requests
                 if not self.request_counts[ip]:
                     del self.request_counts[ip]
@@ -96,10 +93,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         cutoff_time = current_time - 60  # 60 seconds ago
 
         # Filter requests within the last minute
-        recent_requests = [
-            (ts, count) for ts, count in self.request_counts[ip]
-            if ts > cutoff_time
-        ]
+        recent_requests = [(ts, count) for ts, count in self.request_counts[ip] if ts > cutoff_time]
 
         # Calculate total requests in the last minute
         total_requests = sum(count for _, count in recent_requests)
@@ -147,15 +141,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         client_ip = self._get_client_ip(request)
 
         # Check rate limit
-        is_allowed, current_count = self._check_rate_limit(
-            client_ip,
-            settings.rate_limit_requests
-        )
+        is_allowed, current_count = self._check_rate_limit(client_ip, settings.rate_limit_requests)
 
         if not is_allowed:
             logger.warning(
-                f"Rate limit exceeded for IP {client_ip}: "
-                f"{current_count + 1}/{settings.rate_limit_requests} requests/min"
+                f"Rate limit exceeded for IP {client_ip}: " f"{current_count + 1}/{settings.rate_limit_requests} requests/min"
             )
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -163,15 +153,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 headers={
                     "Retry-After": "60",
                     "X-RateLimit-Limit": str(settings.rate_limit_requests),
-                    "X-RateLimit-Remaining": "0"
-                }
+                    "X-RateLimit-Remaining": "0",
+                },
             )
 
         # Add rate limit headers to response
         response = await call_next(request)
         response.headers["X-RateLimit-Limit"] = str(settings.rate_limit_requests)
-        response.headers["X-RateLimit-Remaining"] = str(
-            settings.rate_limit_requests - current_count - 1
-        )
+        response.headers["X-RateLimit-Remaining"] = str(settings.rate_limit_requests - current_count - 1)
 
         return response

@@ -44,7 +44,7 @@ async def verify_api_key(api_key: Optional[str] = Security(api_key_header)) -> s
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing API key. Include X-API-Key header in your request.",
-            headers={"WWW-Authenticate": "ApiKey"}
+            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     # Validate API key
@@ -53,14 +53,12 @@ async def verify_api_key(api_key: Optional[str] = Security(api_key_header)) -> s
         # No keys configured - this is a configuration error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="API key authentication is enabled but no keys are configured"
+            detail="API key authentication is enabled but no keys are configured",
         )
 
     if api_key not in valid_keys:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API key",
-            headers={"WWW-Authenticate": "ApiKey"}
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid API key", headers={"WWW-Authenticate": "ApiKey"}
         )
 
     return api_key

@@ -29,27 +29,27 @@ def sample_data():
 
     # Create synthetic patient data
     data = {
-        'age': np.random.uniform(30, 80, n_samples),
-        'sex': np.random.randint(0, 2, n_samples),
-        'cp': np.random.randint(1, 5, n_samples),
-        'trestbps': np.random.uniform(90, 200, n_samples),
-        'chol': np.random.uniform(100, 400, n_samples),
-        'fbs': np.random.randint(0, 2, n_samples),
-        'restecg': np.random.randint(0, 3, n_samples),
-        'thalach': np.random.uniform(60, 200, n_samples),
-        'exang': np.random.randint(0, 2, n_samples),
-        'oldpeak': np.random.uniform(0, 6, n_samples),
-        'slope': np.random.randint(1, 4, n_samples),
-        'ca': np.random.randint(0, 4, n_samples),
-        'thal': np.random.choice([3, 6, 7], n_samples),
-        'target': np.random.randint(0, 2, n_samples)
+        "age": np.random.uniform(30, 80, n_samples),
+        "sex": np.random.randint(0, 2, n_samples),
+        "cp": np.random.randint(1, 5, n_samples),
+        "trestbps": np.random.uniform(90, 200, n_samples),
+        "chol": np.random.uniform(100, 400, n_samples),
+        "fbs": np.random.randint(0, 2, n_samples),
+        "restecg": np.random.randint(0, 3, n_samples),
+        "thalach": np.random.uniform(60, 200, n_samples),
+        "exang": np.random.randint(0, 2, n_samples),
+        "oldpeak": np.random.uniform(0, 6, n_samples),
+        "slope": np.random.randint(1, 4, n_samples),
+        "ca": np.random.randint(0, 4, n_samples),
+        "thal": np.random.choice([3, 6, 7], n_samples),
+        "target": np.random.randint(0, 2, n_samples),
     }
 
     df = pd.DataFrame(data)
 
     # Normalize features (simple min-max for testing)
-    features = df.drop('target', axis=1)
-    target = df['target']
+    features = df.drop("target", axis=1)
+    target = df["target"]
 
     features_normalized = (features - features.min()) / (features.max() - features.min())
 
@@ -97,7 +97,7 @@ class TestRiskPredictorInitialization:
         assert predictor.model.max_depth == 10
         assert predictor.model.min_samples_split == 5
         assert predictor.model.min_samples_leaf == 2
-        assert predictor.model.class_weight == 'balanced'
+        assert predictor.model.class_weight == "balanced"
 
 
 class TestRiskPredictorTraining:
@@ -114,17 +114,17 @@ class TestRiskPredictorTraining:
         metrics = predictor.train(X_train, y_train, X_val, y_val)
 
         # Check that metrics are returned
-        assert 'accuracy' in metrics
-        assert 'precision' in metrics
-        assert 'recall' in metrics
-        assert 'f1' in metrics
-        assert 'roc_auc' in metrics
-        assert 'cv_accuracy_mean' in metrics
-        assert 'cv_accuracy_std' in metrics
+        assert "accuracy" in metrics
+        assert "precision" in metrics
+        assert "recall" in metrics
+        assert "f1" in metrics
+        assert "roc_auc" in metrics
+        assert "cv_accuracy_mean" in metrics
+        assert "cv_accuracy_std" in metrics
 
         # Check that metrics are reasonable
-        assert 0 <= metrics['accuracy'] <= 1
-        assert 0 <= metrics['roc_auc'] <= 1
+        assert 0 <= metrics["accuracy"] <= 1
+        assert 0 <= metrics["roc_auc"] <= 1
 
         # Check that feature names are stored
         assert predictor.feature_names is not None
@@ -147,8 +147,8 @@ class TestRiskPredictorTraining:
         """Test that feature names are stored after training"""
         assert trained_predictor.feature_names is not None
         assert len(trained_predictor.feature_names) == 13
-        assert 'age' in trained_predictor.feature_names
-        assert 'trestbps' in trained_predictor.feature_names
+        assert "age" in trained_predictor.feature_names
+        assert "trestbps" in trained_predictor.feature_names
 
 
 class TestRiskPredictorPrediction:
@@ -162,21 +162,21 @@ class TestRiskPredictorPrediction:
         result = trained_predictor.predict(patient)
 
         # Check result structure
-        assert 'risk_score' in result
-        assert 'has_disease' in result
-        assert 'classification' in result
-        assert 'probability' in result
-        assert 'feature_importance' in result
+        assert "risk_score" in result
+        assert "has_disease" in result
+        assert "classification" in result
+        assert "probability" in result
+        assert "feature_importance" in result
 
         # Check value ranges
-        assert 0 <= result['risk_score'] <= 100
-        assert 0 <= result['probability'] <= 1
-        assert isinstance(result['has_disease'], bool)
-        assert result['classification'] in ['Low Risk', 'Medium Risk', 'High Risk']
+        assert 0 <= result["risk_score"] <= 100
+        assert 0 <= result["probability"] <= 1
+        assert isinstance(result["has_disease"], bool)
+        assert result["classification"] in ["Low Risk", "Medium Risk", "High Risk"]
 
         # Check feature importance
-        assert isinstance(result['feature_importance'], dict)
-        assert len(result['feature_importance']) == 13
+        assert isinstance(result["feature_importance"], dict)
+        assert len(result["feature_importance"]) == 13
 
     def test_predict_risk_classification(self, trained_predictor, sample_data):
         """Test risk classification thresholds"""
@@ -187,12 +187,12 @@ class TestRiskPredictorPrediction:
         patient = X.iloc[[0]]
         result = trained_predictor.predict(patient)
 
-        if result['risk_score'] < 30:
-            assert result['classification'] == 'Low Risk'
-        elif result['risk_score'] < 70:
-            assert result['classification'] == 'Medium Risk'
+        if result["risk_score"] < 30:
+            assert result["classification"] == "Low Risk"
+        elif result["risk_score"] < 70:
+            assert result["classification"] == "Medium Risk"
         else:
-            assert result['classification'] == 'High Risk'
+            assert result["classification"] == "High Risk"
 
     def test_predict_before_training(self, sample_data):
         """Test that prediction fails before training"""
@@ -208,7 +208,7 @@ class TestRiskPredictorPrediction:
         X, _ = sample_data
 
         # Create data with wrong columns
-        wrong_patient = X.iloc[[0]].rename(columns={'age': 'wrong_feature'})
+        wrong_patient = X.iloc[[0]].rename(columns={"age": "wrong_feature"})
 
         with pytest.raises(ValueError, match="Feature mismatch"):
             trained_predictor.predict(wrong_patient)
@@ -229,15 +229,15 @@ class TestRiskPredictorEvaluation:
         metrics = trained_predictor.evaluate(X_test, y_test)
 
         # Check metrics are returned
-        assert 'accuracy' in metrics
-        assert 'precision' in metrics
-        assert 'recall' in metrics
-        assert 'f1' in metrics
-        assert 'roc_auc' in metrics
+        assert "accuracy" in metrics
+        assert "precision" in metrics
+        assert "recall" in metrics
+        assert "f1" in metrics
+        assert "roc_auc" in metrics
 
         # Check metrics are in valid range
-        assert 0 <= metrics['accuracy'] <= 1
-        assert 0 <= metrics['roc_auc'] <= 1
+        assert 0 <= metrics["accuracy"] <= 1
+        assert 0 <= metrics["roc_auc"] <= 1
 
     def test_evaluate_before_training(self, sample_data):
         """Test that evaluation fails before training"""
@@ -264,18 +264,18 @@ class TestRiskPredictorFeatureImportance:
 
         # Check structure
         assert isinstance(importance_df, pd.DataFrame)
-        assert 'feature' in importance_df.columns
-        assert 'importance' in importance_df.columns
+        assert "feature" in importance_df.columns
+        assert "importance" in importance_df.columns
 
         # Check that we have all features
         assert len(importance_df) == 13
 
         # Check that importances are positive and sum to ~1
-        assert (importance_df['importance'] >= 0).all()
-        assert 0.9 < importance_df['importance'].sum() <= 1.1  # Allow some floating point error
+        assert (importance_df["importance"] >= 0).all()
+        assert 0.9 < importance_df["importance"].sum() <= 1.1  # Allow some floating point error
 
         # Check that features are sorted by importance
-        assert importance_df['importance'].is_monotonic_decreasing
+        assert importance_df["importance"].is_monotonic_decreasing
 
     def test_feature_importance_before_training(self):
         """Test that feature importance fails before training"""
@@ -313,8 +313,8 @@ class TestRiskPredictorPersistence:
             result_original = trained_predictor.predict(patient)
             result_loaded = new_predictor.predict(patient)
 
-            assert result_original['risk_score'] == result_loaded['risk_score']
-            assert result_original['has_disease'] == result_loaded['has_disease']
+            assert result_original["risk_score"] == result_loaded["risk_score"]
+            assert result_original["has_disease"] == result_loaded["has_disease"]
 
     def test_save_before_training(self):
         """Test that save fails before training"""
@@ -345,8 +345,8 @@ class TestRiskPredictorEdgeCases:
         result1 = trained_predictor.predict(patient)
         result2 = trained_predictor.predict(patient)
 
-        assert result1['risk_score'] == result2['risk_score']
-        assert result1['has_disease'] == result2['has_disease']
+        assert result1["risk_score"] == result2["risk_score"]
+        assert result1["has_disease"] == result2["has_disease"]
 
     def test_multiple_predictions(self, trained_predictor, sample_data):
         """Test predicting on multiple patients sequentially"""
@@ -362,7 +362,7 @@ class TestRiskPredictorEdgeCases:
         assert len(results) == 5
 
         # Results should vary (very unlikely to be all identical)
-        risk_scores = [r['risk_score'] for r in results]
+        risk_scores = [r["risk_score"] for r in results]
         assert len(set(risk_scores)) > 1
 
 

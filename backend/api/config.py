@@ -23,8 +23,7 @@ class Settings(BaseSettings):
     # API Configuration
     api_title: str = Field(default="HealthGuard API", description="API title")
     api_description: str = Field(
-        default="Cardiovascular Disease Risk Prediction & Intervention Recommendation",
-        description="API description"
+        default="Cardiovascular Disease Risk Prediction & Intervention Recommendation", description="API description"
     )
     api_version: str = Field(default="1.0.0", description="API version")
     api_host: str = Field(default="0.0.0.0", description="API host")
@@ -33,8 +32,7 @@ class Settings(BaseSettings):
 
     # CORS Configuration
     cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:5173",
-        description="Comma-separated list of allowed CORS origins"
+        default="http://localhost:3000,http://localhost:5173", description="Comma-separated list of allowed CORS origins"
     )
     cors_allow_credentials: bool = Field(default=True, description="Allow credentials in CORS")
     cors_allow_methods: str = Field(default="*", description="Allowed HTTP methods")
@@ -48,38 +46,23 @@ class Settings(BaseSettings):
 
     # Model Paths
     models_dir: Path = Field(
-        default_factory=lambda: Path(__file__).parent.parent / "models",
-        description="Directory containing trained ML models"
+        default_factory=lambda: Path(__file__).parent.parent / "models", description="Directory containing trained ML models"
     )
-    risk_predictor_filename: str = Field(
-        default="risk_predictor.pkl",
-        description="Risk predictor model filename"
-    )
-    intervention_agent_filename: str = Field(
-        default="intervention_agent.pkl",
-        description="Intervention agent model filename"
-    )
+    risk_predictor_filename: str = Field(default="risk_predictor.pkl", description="Risk predictor model filename")
+    intervention_agent_filename: str = Field(default="intervention_agent.pkl", description="Intervention agent model filename")
     scaler_path: Path = Field(
         default_factory=lambda: Path(__file__).parent.parent / "data" / "processed" / "scaler.pkl",
-        description="Path to data scaler"
+        description="Path to data scaler",
     )
 
     # Logging Configuration
     log_level: str = Field(default="INFO", description="Logging level")
-    log_format: str = Field(
-        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        description="Log format string"
-    )
+    log_format: str = Field(default="%(asctime)s - %(name)s - %(levelname)s - %(message)s", description="Log format string")
 
     # Environment
     environment: str = Field(default="development", description="Environment (development/staging/production)")
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore")
 
     @field_validator("cors_origins", mode="before")
     @classmethod

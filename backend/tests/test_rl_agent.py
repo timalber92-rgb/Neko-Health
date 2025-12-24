@@ -29,19 +29,19 @@ def sample_patient_data():
     Create sample normalized patient data for testing.
     """
     data = {
-        'age': [0.5],  # Normalized values
-        'sex': [1.0],
-        'cp': [0.75],
-        'trestbps': [0.6],
-        'chol': [0.55],
-        'fbs': [1.0],
-        'restecg': [0.5],
-        'thalach': [0.7],
-        'exang': [0.0],
-        'oldpeak': [0.4],
-        'slope': [0.66],
-        'ca': [0.0],
-        'thal': [0.5]
+        "age": [0.5],  # Normalized values
+        "sex": [1.0],
+        "cp": [0.75],
+        "trestbps": [0.6],
+        "chol": [0.55],
+        "fbs": [1.0],
+        "restecg": [0.5],
+        "thalach": [0.7],
+        "exang": [0.0],
+        "oldpeak": [0.4],
+        "slope": [0.66],
+        "ca": [0.0],
+        "thal": [0.5],
     }
     return pd.DataFrame(data)
 
@@ -55,20 +55,20 @@ def sample_training_data():
     n_samples = 100
 
     data = {
-        'age': np.random.uniform(0, 1, n_samples),
-        'sex': np.random.uniform(0, 1, n_samples),
-        'cp': np.random.uniform(0, 1, n_samples),
-        'trestbps': np.random.uniform(0, 1, n_samples),
-        'chol': np.random.uniform(0, 1, n_samples),
-        'fbs': np.random.uniform(0, 1, n_samples),
-        'restecg': np.random.uniform(0, 1, n_samples),
-        'thalach': np.random.uniform(0, 1, n_samples),
-        'exang': np.random.uniform(0, 1, n_samples),
-        'oldpeak': np.random.uniform(0, 1, n_samples),
-        'slope': np.random.uniform(0, 1, n_samples),
-        'ca': np.random.uniform(0, 1, n_samples),
-        'thal': np.random.uniform(0, 1, n_samples),
-        'target': np.random.randint(0, 2, n_samples)
+        "age": np.random.uniform(0, 1, n_samples),
+        "sex": np.random.uniform(0, 1, n_samples),
+        "cp": np.random.uniform(0, 1, n_samples),
+        "trestbps": np.random.uniform(0, 1, n_samples),
+        "chol": np.random.uniform(0, 1, n_samples),
+        "fbs": np.random.uniform(0, 1, n_samples),
+        "restecg": np.random.uniform(0, 1, n_samples),
+        "thalach": np.random.uniform(0, 1, n_samples),
+        "exang": np.random.uniform(0, 1, n_samples),
+        "oldpeak": np.random.uniform(0, 1, n_samples),
+        "slope": np.random.uniform(0, 1, n_samples),
+        "ca": np.random.uniform(0, 1, n_samples),
+        "thal": np.random.uniform(0, 1, n_samples),
+        "target": np.random.randint(0, 2, n_samples),
     }
 
     return pd.DataFrame(data)
@@ -79,9 +79,10 @@ def mock_risk_predictor(sample_training_data):
     """
     Create a simple mock risk predictor for testing RL agent.
     """
+
     class MockRiskPredictor:
         def __init__(self):
-            self.feature_names = sample_training_data.drop('target', axis=1).columns.tolist()
+            self.feature_names = sample_training_data.drop("target", axis=1).columns.tolist()
 
         def predict(self, patient_data):
             # Simple mock: base risk score on average of features
@@ -89,11 +90,11 @@ def mock_risk_predictor(sample_training_data):
             risk_score = avg_value * 100
 
             return {
-                'risk_score': float(risk_score),
-                'has_disease': risk_score > 50,
-                'classification': 'High Risk' if risk_score > 70 else 'Medium Risk' if risk_score > 30 else 'Low Risk',
-                'probability': risk_score / 100,
-                'feature_importance': {col: 1.0/len(patient_data.columns) for col in patient_data.columns}
+                "risk_score": float(risk_score),
+                "has_disease": risk_score > 50,
+                "classification": "High Risk" if risk_score > 70 else "Medium Risk" if risk_score > 30 else "Low Risk",
+                "probability": risk_score / 100,
+                "feature_importance": {col: 1.0 / len(patient_data.columns) for col in patient_data.columns},
             }
 
     return MockRiskPredictor()
@@ -145,10 +146,10 @@ class TestInterventionAgentInitialization:
         assert len(ACTIONS) == 5
         for action_id in range(5):
             assert action_id in ACTIONS
-            assert 'name' in ACTIONS[action_id]
-            assert 'description' in ACTIONS[action_id]
-            assert 'cost' in ACTIONS[action_id]
-            assert 'intensity' in ACTIONS[action_id]
+            assert "name" in ACTIONS[action_id]
+            assert "description" in ACTIONS[action_id]
+            assert "cost" in ACTIONS[action_id]
+            assert "intensity" in ACTIONS[action_id]
 
 
 class TestStateBinning:
@@ -296,9 +297,9 @@ class TestInterventionSimulation:
         modified_data = agent.simulate_intervention_effect(sample_patient_data, action=1)
 
         # Check that modifiable factors improved
-        assert modified_data['trestbps'].iloc[0] < original_data['trestbps'].iloc[0]
-        assert modified_data['chol'].iloc[0] < original_data['chol'].iloc[0]
-        assert modified_data['thalach'].iloc[0] > original_data['thalach'].iloc[0]
+        assert modified_data["trestbps"].iloc[0] < original_data["trestbps"].iloc[0]
+        assert modified_data["chol"].iloc[0] < original_data["chol"].iloc[0]
+        assert modified_data["thalach"].iloc[0] > original_data["thalach"].iloc[0]
 
     def test_simulate_intensive_treatment(self, sample_patient_data):
         """Test Intensive Treatment (maximum improvements)"""
@@ -310,8 +311,8 @@ class TestInterventionSimulation:
         modified_lifestyle = agent.simulate_intervention_effect(sample_patient_data, action=1)
 
         # Blood pressure reduction should be greater with intensive treatment
-        bp_reduction_intensive = original_data['trestbps'].iloc[0] - modified_data['trestbps'].iloc[0]
-        bp_reduction_lifestyle = original_data['trestbps'].iloc[0] - modified_lifestyle['trestbps'].iloc[0]
+        bp_reduction_intensive = original_data["trestbps"].iloc[0] - modified_data["trestbps"].iloc[0]
+        bp_reduction_lifestyle = original_data["trestbps"].iloc[0] - modified_lifestyle["trestbps"].iloc[0]
 
         assert bp_reduction_intensive > bp_reduction_lifestyle
 
@@ -340,14 +341,14 @@ class TestTraining:
         stats = agent.train(sample_training_data, mock_risk_predictor, episodes=50)
 
         # Check that stats are returned
-        assert 'episodes' in stats
-        assert 'states_explored' in stats
-        assert 'final_avg_reward' in stats
-        assert 'rewards_history' in stats
+        assert "episodes" in stats
+        assert "states_explored" in stats
+        assert "final_avg_reward" in stats
+        assert "rewards_history" in stats
 
-        assert stats['episodes'] == 50
-        assert stats['states_explored'] > 0
-        assert len(stats['rewards_history']) == 50
+        assert stats["episodes"] == 50
+        assert stats["states_explored"] > 0
+        assert len(stats["rewards_history"]) == 50
 
     def test_train_creates_q_table(self, sample_training_data, mock_risk_predictor):
         """Test that training populates Q-table"""
@@ -380,22 +381,22 @@ class TestRecommendation:
         recommendation = trained_agent.recommend(sample_patient_data, mock_risk_predictor)
 
         # Check recommendation structure
-        assert 'action' in recommendation
-        assert 'action_name' in recommendation
-        assert 'description' in recommendation
-        assert 'cost' in recommendation
-        assert 'intensity' in recommendation
-        assert 'current_risk' in recommendation
-        assert 'expected_final_risk' in recommendation
-        assert 'expected_risk_reduction' in recommendation
-        assert 'q_values' in recommendation
+        assert "action" in recommendation
+        assert "action_name" in recommendation
+        assert "description" in recommendation
+        assert "cost" in recommendation
+        assert "intensity" in recommendation
+        assert "current_risk" in recommendation
+        assert "expected_final_risk" in recommendation
+        assert "expected_risk_reduction" in recommendation
+        assert "q_values" in recommendation
 
         # Check value validity
-        assert 0 <= recommendation['action'] < len(ACTIONS)
-        assert recommendation['action_name'] == ACTIONS[recommendation['action']]['name']
-        assert 0 <= recommendation['current_risk'] <= 100
-        assert isinstance(recommendation['q_values'], dict)
-        assert len(recommendation['q_values']) == len(ACTIONS)
+        assert 0 <= recommendation["action"] < len(ACTIONS)
+        assert recommendation["action_name"] == ACTIONS[recommendation["action"]]["name"]
+        assert 0 <= recommendation["current_risk"] <= 100
+        assert isinstance(recommendation["q_values"], dict)
+        assert len(recommendation["q_values"]) == len(ACTIONS)
 
     def test_recommend_before_training(self, sample_patient_data, mock_risk_predictor):
         """Test that recommendation fails before training"""
@@ -410,18 +411,18 @@ class TestRecommendation:
         rec2 = trained_agent.recommend(sample_patient_data, mock_risk_predictor)
 
         # Greedy policy should give same recommendation
-        assert rec1['action'] == rec2['action']
-        assert rec1['action_name'] == rec2['action_name']
+        assert rec1["action"] == rec2["action"]
+        assert rec1["action_name"] == rec2["action_name"]
 
     def test_recommend_q_values(self, trained_agent, sample_patient_data, mock_risk_predictor):
         """Test that Q-values are included in recommendation"""
         recommendation = trained_agent.recommend(sample_patient_data, mock_risk_predictor)
 
-        q_values = recommendation['q_values']
+        q_values = recommendation["q_values"]
 
         # All actions should have Q-values
         for action_id in range(len(ACTIONS)):
-            action_name = ACTIONS[action_id]['name']
+            action_name = ACTIONS[action_id]["name"]
             assert action_name in q_values
             assert isinstance(q_values[action_name], float)
 
@@ -456,7 +457,7 @@ class TestPersistence:
             rec_original = trained_agent.recommend(sample_patient_data, mock_risk_predictor)
             rec_loaded = new_agent.recommend(sample_patient_data, mock_risk_predictor)
 
-            assert rec_original['action'] == rec_loaded['action']
+            assert rec_original["action"] == rec_loaded["action"]
 
     def test_save_before_training(self):
         """Test that save fails before training"""
@@ -482,31 +483,55 @@ class TestEdgeCases:
     def test_high_risk_patient_recommendation(self, trained_agent, mock_risk_predictor):
         """Test recommendation for high-risk patient"""
         # Create high-risk patient (high values in risk features)
-        high_risk_patient = pd.DataFrame({
-            'age': [0.9], 'sex': [1.0], 'cp': [1.0], 'trestbps': [0.9],
-            'chol': [0.9], 'fbs': [1.0], 'restecg': [1.0], 'thalach': [0.3],
-            'exang': [1.0], 'oldpeak': [0.9], 'slope': [1.0], 'ca': [1.0], 'thal': [1.0]
-        })
+        high_risk_patient = pd.DataFrame(
+            {
+                "age": [0.9],
+                "sex": [1.0],
+                "cp": [1.0],
+                "trestbps": [0.9],
+                "chol": [0.9],
+                "fbs": [1.0],
+                "restecg": [1.0],
+                "thalach": [0.3],
+                "exang": [1.0],
+                "oldpeak": [0.9],
+                "slope": [1.0],
+                "ca": [1.0],
+                "thal": [1.0],
+            }
+        )
 
         recommendation = trained_agent.recommend(high_risk_patient, mock_risk_predictor)
 
         # Should recommend some intervention (not just monitoring)
         # Note: This might not always hold due to stochastic training
-        assert 0 <= recommendation['action'] < len(ACTIONS)
+        assert 0 <= recommendation["action"] < len(ACTIONS)
 
     def test_low_risk_patient_recommendation(self, trained_agent, mock_risk_predictor):
         """Test recommendation for low-risk patient"""
         # Create low-risk patient
-        low_risk_patient = pd.DataFrame({
-            'age': [0.2], 'sex': [0.0], 'cp': [0.0], 'trestbps': [0.3],
-            'chol': [0.3], 'fbs': [0.0], 'restecg': [0.0], 'thalach': [0.8],
-            'exang': [0.0], 'oldpeak': [0.1], 'slope': [0.0], 'ca': [0.0], 'thal': [0.0]
-        })
+        low_risk_patient = pd.DataFrame(
+            {
+                "age": [0.2],
+                "sex": [0.0],
+                "cp": [0.0],
+                "trestbps": [0.3],
+                "chol": [0.3],
+                "fbs": [0.0],
+                "restecg": [0.0],
+                "thalach": [0.8],
+                "exang": [0.0],
+                "oldpeak": [0.1],
+                "slope": [0.0],
+                "ca": [0.0],
+                "thal": [0.0],
+            }
+        )
 
         recommendation = trained_agent.recommend(low_risk_patient, mock_risk_predictor)
 
         # Should recommend valid action
-        assert 0 <= recommendation['action'] < len(ACTIONS)
+        assert 0 <= recommendation["action"] < len(ACTIONS)
 
 
 if __name__ == "__main__":

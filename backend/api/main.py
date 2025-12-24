@@ -23,13 +23,14 @@ from api.models import (
     SimulationRequest,
     HealthStatus,
     ErrorResponse,
-    HealthCheckResponse
+    HealthCheckResponse,
 )
 from api.config import get_settings, Settings
 from api.auth import verify_api_key
 from api.rate_limit import RateLimitMiddleware
 from ml.risk_predictor import RiskPredictor
 from ml.rl_agent import InterventionAgent
+from ml.intervention_utils import apply_intervention_effects, ensure_risk_monotonicity
 
 # Global model instances
 risk_predictor: RiskPredictor = None
@@ -48,10 +49,7 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
 
     # Configure logging based on settings
-    logging.basicConfig(
-        level=getattr(logging, settings.log_level.upper()),
-        format=settings.log_format
-    )
+    logging.basicConfig(level=getattr(logging, settings.log_level.upper()), format=settings.log_format)
     logger = logging.getLogger(__name__)
 
     logger.info(f"Starting HealthGuard API in {settings.environment} mode...")
@@ -114,7 +112,7 @@ app = FastAPI(
     description=settings.api_description,
     version=settings.api_version,
     lifespan=lifespan,
-    debug=settings.debug
+    debug=settings.debug,
 )
 
 # Add rate limiting middleware (before CORS)
@@ -147,20 +145,14 @@ def normalize_patient_data(patient: PatientInput) -> pd.DataFrame:
         HTTPException: If scaler is not loaded
     """
     if scaler is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Data scaler not loaded"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Data scaler not loaded")
 
     # Convert to DataFrame
     patient_dict = patient.model_dump()
     patient_df = pd.DataFrame([patient_dict])
 
     # Normalize using the same scaler from training
-    patient_normalized = pd.DataFrame(
-        scaler.transform(patient_df),
-        columns=patient_df.columns
-    )
+    patient_normalized = pd.DataFrame(scaler.transform(patient_df), columns=patient_df.columns)
 
     return patient_normalized
 
@@ -173,15 +165,12 @@ async def health_check():
     Returns:
         HealthCheckResponse with API status and loaded models
     """
-    models_status = {
-        "risk_predictor": risk_predictor is not None,
-        "intervention_agent": intervention_agent is not None
-    }
+    models_status = {"risk_predictor": risk_predictor is not None, "intervention_agent": intervention_agent is not None}
 
     return HealthCheckResponse(
         status="healthy" if all(models_status.values()) else "degraded",
         message="HealthGuard API is running",
-        models_loaded=models_status
+        models_loaded=models_status,
     )
 
 
@@ -204,10 +193,7 @@ async def predict_risk(patient: PatientInput):
         HTTPException: If model is not loaded or prediction fails
     """
     if risk_predictor is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Risk predictor model not loaded"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Risk predictor model not loaded")
 
     try:
         # Normalize patient data
@@ -216,19 +202,13 @@ async def predict_risk(patient: PatientInput):
         # Make prediction
         prediction = risk_predictor.predict(patient_normalized)
 
-        logger.info(
-            f"Prediction: {prediction['classification']} "
-            f"({prediction['risk_score']:.1f}%)"
-        )
+        logger.info(f"Prediction: {prediction['classification']} " f"({prediction['risk_score']:.1f}%)")
 
         return RiskPrediction(**prediction)
 
     except Exception as e:
         logger.error(f"Prediction failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Prediction failed: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Prediction failed: {str(e)}")
 
 
 @app.post("/api/recommend", response_model=InterventionRecommendation, dependencies=[Depends(verify_api_key)])
@@ -250,20 +230,14 @@ async def recommend_intervention(patient: PatientInput):
         HTTPException: If models are not loaded or recommendation fails
     """
     if risk_predictor is None or intervention_agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Models not loaded"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Models not loaded")
 
     try:
         # Normalize patient data
         patient_normalized = normalize_patient_data(patient)
 
         # Get recommendation
-        recommendation = intervention_agent.recommend(
-            patient_normalized,
-            risk_predictor
-        )
+        recommendation = intervention_agent.recommend(patient_normalized, risk_predictor)
 
         logger.info(
             f"Recommendation: {recommendation['action_name']} "
@@ -274,10 +248,7 @@ async def recommend_intervention(patient: PatientInput):
 
     except Exception as e:
         logger.error(f"Recommendation failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Recommendation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Recommendation failed: {str(e)}")
 
 
 @app.post("/api/simulate", response_model=HealthStatus, dependencies=[Depends(verify_api_key)])
@@ -299,10 +270,7 @@ async def simulate_intervention(request: SimulationRequest):
         HTTPException: If models are not loaded or simulation fails
     """
     if risk_predictor is None or intervention_agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Models not loaded"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Models not loaded")
 
     try:
         # Convert patient data to DataFrame (raw values)
@@ -314,82 +282,54 @@ async def simulate_intervention(request: SimulationRequest):
 
         # Get current risk
         current_prediction = risk_predictor.predict(patient_normalized)
-        current_risk = current_prediction['risk_score']
+        current_risk = current_prediction["risk_score"]
 
         # Apply intervention effects to RAW values (not normalized)
-        modified_raw = patient_df.copy()
-
-        if request.action == 0:  # Monitor Only
-            # No change in metrics
-            pass
-        elif request.action == 1:  # Lifestyle Intervention
-            # Modest improvements in modifiable factors
-            modified_raw['trestbps'] *= 0.95  # 5% BP reduction
-            modified_raw['chol'] *= 0.90  # 10% cholesterol reduction
-            modified_raw['thalach'] *= 1.05  # 5% improved max HR
-        elif request.action == 2:  # Single Medication
-            # Target specific risk factors
-            modified_raw['trestbps'] *= 0.90  # 10% BP reduction
-            modified_raw['chol'] *= 0.85  # 15% cholesterol reduction
-        elif request.action == 3:  # Combination Therapy
-            # Synergistic effects
-            modified_raw['trestbps'] *= 0.85  # 15% BP reduction
-            modified_raw['chol'] *= 0.80  # 20% cholesterol reduction
-            modified_raw['thalach'] *= 1.08  # 8% improved max HR
-            modified_raw['oldpeak'] *= 0.90  # 10% reduced ST depression
-        elif request.action == 4:  # Intensive Treatment
-            # Maximum intervention effects
-            modified_raw['trestbps'] *= 0.80  # 20% BP reduction
-            modified_raw['chol'] *= 0.75  # 25% cholesterol reduction
-            modified_raw['thalach'] *= 1.10  # 10% improved max HR
-            modified_raw['oldpeak'] *= 0.80  # 20% reduced ST depression
+        # Using smart intervention logic with bounds checking
+        modified_raw = apply_intervention_effects(patient_df, request.action)
 
         # Normalize modified data for prediction
-        modified_normalized = pd.DataFrame(
-            scaler.transform(modified_raw),
-            columns=modified_raw.columns
-        )
+        modified_normalized = pd.DataFrame(scaler.transform(modified_raw), columns=modified_raw.columns)
 
         # Get new risk from modified data
         new_prediction = risk_predictor.predict(modified_normalized)
-        new_risk = new_prediction['risk_score']
+        new_risk = new_prediction["risk_score"]
 
         # Extract key metrics for comparison (RAW VALUES)
         current_metrics = {
-            'trestbps': float(patient_df['trestbps'].iloc[0]),
-            'chol': float(patient_df['chol'].iloc[0]),
-            'thalach': float(patient_df['thalach'].iloc[0]),
-            'oldpeak': float(patient_df['oldpeak'].iloc[0])
+            "trestbps": float(patient_df["trestbps"].iloc[0]),
+            "chol": float(patient_df["chol"].iloc[0]),
+            "thalach": float(patient_df["thalach"].iloc[0]),
+            "oldpeak": float(patient_df["oldpeak"].iloc[0]),
         }
 
         optimized_metrics = {
-            'trestbps': float(modified_raw['trestbps'].iloc[0]),
-            'chol': float(modified_raw['chol'].iloc[0]),
-            'thalach': float(modified_raw['thalach'].iloc[0]),
-            'oldpeak': float(modified_raw['oldpeak'].iloc[0])
+            "trestbps": float(modified_raw["trestbps"].iloc[0]),
+            "chol": float(modified_raw["chol"].iloc[0]),
+            "thalach": float(modified_raw["thalach"].iloc[0]),
+            "oldpeak": float(modified_raw["oldpeak"].iloc[0]),
         }
+
+        # Apply risk monotonicity safeguard to prevent paradoxical risk increases
+        final_risk, final_metrics = ensure_risk_monotonicity(
+            current_risk, new_risk, current_metrics, optimized_metrics, request.action
+        )
 
         result = HealthStatus(
             current_metrics=current_metrics,
-            optimized_metrics=optimized_metrics,
+            optimized_metrics=final_metrics,
             current_risk=current_risk,
-            expected_risk=new_risk,
-            risk_reduction=current_risk - new_risk
+            expected_risk=final_risk,
+            risk_reduction=current_risk - final_risk,
         )
 
-        logger.info(
-            f"Simulation: Action {request.action}, "
-            f"Risk {current_risk:.1f}% → {new_risk:.1f}%"
-        )
+        logger.info(f"Simulation: Action {request.action}, " f"Risk {current_risk:.1f}% → {new_risk:.1f}%")
 
         return result
 
     except Exception as e:
         logger.error(f"Simulation failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Simulation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Simulation failed: {str(e)}")
 
 
 @app.exception_handler(Exception)
@@ -402,8 +342,7 @@ async def global_exception_handler(request, exc):
     """
     logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"error": "Internal server error", "detail": str(exc)}
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"error": "Internal server error", "detail": str(exc)}
     )
 
 
@@ -415,5 +354,5 @@ if __name__ == "__main__":
         host=settings.api_host,
         port=settings.api_port,
         reload=settings.debug,
-        log_level=settings.log_level.lower()
+        log_level=settings.log_level.lower(),
     )

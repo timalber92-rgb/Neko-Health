@@ -15,45 +15,44 @@ import numpy as np
 import pandas as pd
 from collections import defaultdict
 
+from .intervention_utils import apply_intervention_effects
+
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Action definitions (intervention strategies)
 ACTIONS = {
     0: {
-        'name': 'Monitor Only',
-        'description': 'Quarterly checkups with no active intervention',
-        'cost': 'Low ($)',
-        'intensity': 'Minimal'
+        "name": "Monitor Only",
+        "description": "Quarterly checkups with no active intervention",
+        "cost": "Low ($)",
+        "intensity": "Minimal",
     },
     1: {
-        'name': 'Lifestyle Intervention',
-        'description': 'Diet and exercise program with regular monitoring',
-        'cost': 'Low ($$)',
-        'intensity': 'Moderate'
+        "name": "Lifestyle Intervention",
+        "description": "Diet and exercise program with regular monitoring",
+        "cost": "Low ($$)",
+        "intensity": "Moderate",
     },
     2: {
-        'name': 'Single Medication',
-        'description': 'Single medication (e.g., statin or beta-blocker)',
-        'cost': 'Medium ($$$)',
-        'intensity': 'Moderate'
+        "name": "Single Medication",
+        "description": "Single medication (e.g., statin or beta-blocker)",
+        "cost": "Medium ($$$)",
+        "intensity": "Moderate",
     },
     3: {
-        'name': 'Combination Therapy',
-        'description': 'Medication plus supervised lifestyle program',
-        'cost': 'High ($$$$)',
-        'intensity': 'High'
+        "name": "Combination Therapy",
+        "description": "Medication plus supervised lifestyle program",
+        "cost": "High ($$$$)",
+        "intensity": "High",
     },
     4: {
-        'name': 'Intensive Treatment',
-        'description': 'Multiple medications with intensive lifestyle management',
-        'cost': 'Very High ($$$$$)',
-        'intensity': 'Very High'
-    }
+        "name": "Intensive Treatment",
+        "description": "Multiple medications with intensive lifestyle management",
+        "cost": "Very High ($$$$$)",
+        "intensity": "Very High",
+    },
 }
 
 
@@ -74,13 +73,7 @@ class InterventionAgent:
         state_bins: Discretization boundaries for each feature
     """
 
-    def __init__(
-        self,
-        n_bins: int = 5,
-        epsilon: float = 0.1,
-        alpha: float = 0.1,
-        gamma: float = 0.95
-    ):
+    def __init__(self, n_bins: int = 5, epsilon: float = 0.1, alpha: float = 0.1, gamma: float = 0.95):
         """
         Initialize Q-Learning agent.
 
@@ -98,12 +91,9 @@ class InterventionAgent:
         self.state_bins: Optional[Dict[str, np.ndarray]] = None
 
         # Features to use for state representation (key clinical indicators)
-        self.state_features = ['age', 'trestbps', 'chol', 'thalach', 'oldpeak']
+        self.state_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
 
-        logger.info(
-            f"Initialized InterventionAgent: n_bins={n_bins}, "
-            f"epsilon={epsilon}, alpha={alpha}, gamma={gamma}"
-        )
+        logger.info(f"Initialized InterventionAgent: n_bins={n_bins}, " f"epsilon={epsilon}, alpha={alpha}, gamma={gamma}")
 
     def create_state_bins(self, data: pd.DataFrame) -> None:
         """
@@ -120,13 +110,7 @@ class InterventionAgent:
         for feature in self.state_features:
             if feature in data.columns:
                 # Use quantile-based binning for better distribution
-                bins = pd.qcut(
-                    data[feature],
-                    q=self.n_bins,
-                    labels=False,
-                    duplicates='drop',
-                    retbins=True
-                )[1]
+                bins = pd.qcut(data[feature], q=self.n_bins, labels=False, duplicates="drop", retbins=True)[1]
                 self.state_bins[feature] = bins
                 logger.info(f"Created {len(bins)-1} bins for feature '{feature}'")
             else:
@@ -149,9 +133,7 @@ class InterventionAgent:
             ValueError: If state bins haven't been created yet
         """
         if self.state_bins is None:
-            raise ValueError(
-                "State bins not created. Call create_state_bins() or train() first."
-            )
+            raise ValueError("State bins not created. Call create_state_bins() or train() first.")
 
         state = []
         for feature in self.state_features:
@@ -192,12 +174,7 @@ class InterventionAgent:
 
         return action
 
-    def calculate_reward(
-        self,
-        current_risk: float,
-        action: int,
-        next_risk: float
-    ) -> float:
+    def calculate_reward(self, current_risk: float, action: int, next_risk: float) -> float:
         """
         Calculate reward for a state-action-next_state transition.
 
@@ -221,23 +198,19 @@ class InterventionAgent:
         cost_penalty = action * 0.1  # Linear cost increase with action intensity
 
         # Quality of life penalty (intensive treatments reduce QoL)
-        qol_penalty = (action ** 2) * 0.05  # Quadratic penalty for intensive treatments
+        qol_penalty = (action**2) * 0.05  # Quadratic penalty for intensive treatments
 
         # Combined reward
         reward = risk_reduction - cost_penalty - qol_penalty
 
         return reward
 
-    def simulate_intervention_effect(
-        self,
-        patient_data: pd.DataFrame,
-        action: int
-    ) -> pd.DataFrame:
+    def simulate_intervention_effect(self, patient_data: pd.DataFrame, action: int) -> pd.DataFrame:
         """
         Simulate the effect of an intervention on patient metrics.
 
-        This is a simplified simulation. In reality, effects would be learned
-        from longitudinal patient data.
+        Uses smart intervention logic with bounds checking to prevent
+        paradoxical risk increases for healthy patients.
 
         Args:
             patient_data: Current patient features
@@ -246,49 +219,10 @@ class InterventionAgent:
         Returns:
             Modified patient features after intervention
         """
-        # Create a copy to avoid modifying original
-        modified_data = patient_data.copy()
+        # Use centralized intervention logic with adaptive effects
+        return apply_intervention_effects(patient_data, action)
 
-        # Simulate intervention effects (simplified model)
-        # Higher intensity interventions have stronger effects
-
-        if action == 0:  # Monitor Only
-            # No change in metrics
-            pass
-
-        elif action == 1:  # Lifestyle Intervention
-            # Modest improvements in modifiable factors
-            modified_data['trestbps'] *= 0.95  # 5% BP reduction
-            modified_data['chol'] *= 0.90  # 10% cholesterol reduction
-            modified_data['thalach'] *= 1.05  # 5% improved max HR
-
-        elif action == 2:  # Single Medication
-            # Target specific risk factors
-            modified_data['trestbps'] *= 0.90  # 10% BP reduction
-            modified_data['chol'] *= 0.85  # 15% cholesterol reduction
-
-        elif action == 3:  # Combination Therapy
-            # Synergistic effects
-            modified_data['trestbps'] *= 0.85  # 15% BP reduction
-            modified_data['chol'] *= 0.80  # 20% cholesterol reduction
-            modified_data['thalach'] *= 1.08  # 8% improved max HR
-            modified_data['oldpeak'] *= 0.90  # 10% reduced ST depression
-
-        elif action == 4:  # Intensive Treatment
-            # Maximum intervention effects
-            modified_data['trestbps'] *= 0.80  # 20% BP reduction
-            modified_data['chol'] *= 0.75  # 25% cholesterol reduction
-            modified_data['thalach'] *= 1.10  # 10% improved max HR
-            modified_data['oldpeak'] *= 0.80  # 20% reduced ST depression
-
-        return modified_data
-
-    def train(
-        self,
-        data: pd.DataFrame,
-        risk_predictor,
-        episodes: int = 10000
-    ) -> Dict[str, Any]:
+    def train(self, data: pd.DataFrame, risk_predictor, episodes: int = 10000) -> Dict[str, Any]:
         """
         Train Q-table using simulated patient trajectories.
 
@@ -309,7 +243,7 @@ class InterventionAgent:
         self.create_state_bins(data)
 
         # Remove target column if present
-        feature_data = data.drop('target', axis=1, errors='ignore')
+        feature_data = data.drop("target", axis=1, errors="ignore")
 
         # Training statistics
         rewards_history = []
@@ -323,7 +257,7 @@ class InterventionAgent:
             # Get current state and risk
             state = self.discretize_state(patient_data)
             current_prediction = risk_predictor.predict(patient_data)
-            current_risk = current_prediction['risk_score']
+            current_risk = current_prediction["risk_score"]
 
             # Select action (epsilon-greedy during training)
             action = self.get_action(state, training=True)
@@ -334,7 +268,7 @@ class InterventionAgent:
             # Get next state and risk
             next_state = self.discretize_state(modified_data)
             next_prediction = risk_predictor.predict(modified_data)
-            next_risk = next_prediction['risk_score']
+            next_risk = next_prediction["risk_score"]
 
             # Calculate reward
             reward = self.calculate_reward(current_risk, action, next_risk)
@@ -365,17 +299,13 @@ class InterventionAgent:
         logger.info(f"Final average reward: {np.mean(rewards_history[-1000:]):.3f}")
 
         return {
-            'episodes': episodes,
-            'states_explored': len(self.q_table),
-            'final_avg_reward': np.mean(rewards_history[-1000:]),
-            'rewards_history': rewards_history
+            "episodes": episodes,
+            "states_explored": len(self.q_table),
+            "final_avg_reward": np.mean(rewards_history[-1000:]),
+            "rewards_history": rewards_history,
         }
 
-    def recommend(
-        self,
-        patient_data: pd.DataFrame,
-        risk_predictor
-    ) -> Dict[str, Any]:
+    def recommend(self, patient_data: pd.DataFrame, risk_predictor) -> Dict[str, Any]:
         """
         Recommend optimal intervention for a patient.
 
@@ -402,14 +332,12 @@ class InterventionAgent:
             ValueError: If agent hasn't been trained yet
         """
         if self.state_bins is None:
-            raise ValueError(
-                "Agent has not been trained yet. Call train() first."
-            )
+            raise ValueError("Agent has not been trained yet. Call train() first.")
 
         # Get current state and risk
         state = self.discretize_state(patient_data)
         current_prediction = risk_predictor.predict(patient_data)
-        current_risk = current_prediction['risk_score']
+        current_risk = current_prediction["risk_score"]
 
         # Get best action (greedy policy for inference)
         action = self.get_action(state, training=False)
@@ -418,30 +346,24 @@ class InterventionAgent:
         # Simulate expected outcome
         modified_data = self.simulate_intervention_effect(patient_data, action)
         next_prediction = risk_predictor.predict(modified_data)
-        expected_risk = next_prediction['risk_score']
+        expected_risk = next_prediction["risk_score"]
 
         # Get all Q-values for transparency
-        q_values = {
-            ACTIONS[a]['name']: float(self.q_table[state][a])
-            for a in range(len(ACTIONS))
-        }
+        q_values = {ACTIONS[a]["name"]: float(self.q_table[state][a]) for a in range(len(ACTIONS))}
 
         recommendation = {
-            'action': int(action),
-            'action_name': action_info['name'],
-            'description': action_info['description'],
-            'cost': action_info['cost'],
-            'intensity': action_info['intensity'],
-            'current_risk': float(current_risk),
-            'expected_final_risk': float(expected_risk),
-            'expected_risk_reduction': float(current_risk - expected_risk),
-            'q_values': q_values
+            "action": int(action),
+            "action_name": action_info["name"],
+            "description": action_info["description"],
+            "cost": action_info["cost"],
+            "intensity": action_info["intensity"],
+            "current_risk": float(current_risk),
+            "expected_final_risk": float(expected_risk),
+            "expected_risk_reduction": float(current_risk - expected_risk),
+            "q_values": q_values,
         }
 
-        logger.info(
-            f"Recommendation: {action_info['name']} "
-            f"(risk {current_risk:.1f}% → {expected_risk:.1f}%)"
-        )
+        logger.info(f"Recommendation: {action_info['name']} " f"(risk {current_risk:.1f}% → {expected_risk:.1f}%)")
 
         return recommendation
 
@@ -457,22 +379,20 @@ class InterventionAgent:
             IOError: If file cannot be written
         """
         if self.state_bins is None:
-            raise ValueError(
-                "Agent has not been trained yet. Call train() first."
-            )
+            raise ValueError("Agent has not been trained yet. Call train() first.")
 
         try:
             agent_data = {
-                'q_table': dict(self.q_table),  # Convert defaultdict to dict
-                'state_bins': self.state_bins,
-                'n_bins': self.n_bins,
-                'epsilon': self.epsilon,
-                'alpha': self.alpha,
-                'gamma': self.gamma,
-                'state_features': self.state_features
+                "q_table": dict(self.q_table),  # Convert defaultdict to dict
+                "state_bins": self.state_bins,
+                "n_bins": self.n_bins,
+                "epsilon": self.epsilon,
+                "alpha": self.alpha,
+                "gamma": self.gamma,
+                "state_features": self.state_features,
             }
 
-            with open(path, 'wb') as f:
+            with open(path, "wb") as f:
                 pickle.dump(agent_data, f)
 
             logger.info(f"Agent saved to {path}")
@@ -496,16 +416,16 @@ class InterventionAgent:
             raise FileNotFoundError(f"Agent file not found: {path}")
 
         try:
-            with open(path, 'rb') as f:
+            with open(path, "rb") as f:
                 agent_data = pickle.load(f)
 
-            self.q_table = defaultdict(lambda: np.zeros(len(ACTIONS)), agent_data['q_table'])
-            self.state_bins = agent_data['state_bins']
-            self.n_bins = agent_data['n_bins']
-            self.epsilon = agent_data['epsilon']
-            self.alpha = agent_data['alpha']
-            self.gamma = agent_data['gamma']
-            self.state_features = agent_data['state_features']
+            self.q_table = defaultdict(lambda: np.zeros(len(ACTIONS)), agent_data["q_table"])
+            self.state_bins = agent_data["state_bins"]
+            self.n_bins = agent_data["n_bins"]
+            self.epsilon = agent_data["epsilon"]
+            self.alpha = agent_data["alpha"]
+            self.gamma = agent_data["gamma"]
+            self.state_features = agent_data["state_features"]
 
             logger.info(f"Agent loaded from {path}")
             logger.info(f"States in Q-table: {len(self.q_table)}")
@@ -535,9 +455,9 @@ def main():
     from data.load import load_processed_data
     from ml.risk_predictor import RiskPredictor
 
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info("HealthGuard - RL Intervention Agent Training")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
     # Load data
     logger.info("\n[1/5] Loading processed data and risk predictor...")
@@ -564,7 +484,7 @@ def main():
 
     # Test on sample patients
     logger.info("\n[4/5] Testing recommendations on sample patients...")
-    test_features = test_df.drop('target', axis=1, errors='ignore')
+    test_features = test_df.drop("target", axis=1, errors="ignore")
 
     for i in [0, 10, 20]:  # Test on 3 different patients
         logger.info(f"\n--- Patient {i+1} ---")
@@ -588,14 +508,14 @@ def main():
     agent.save(agent_path)
 
     # Summary
-    logger.info("\n" + "="*80)
+    logger.info("\n" + "=" * 80)
     logger.info("TRAINING SUMMARY")
-    logger.info("="*80)
+    logger.info("=" * 80)
     logger.info(f"Episodes: {stats['episodes']}")
     logger.info(f"States Explored: {stats['states_explored']}")
     logger.info(f"Final Avg Reward: {stats['final_avg_reward']:.3f}")
     logger.info(f"\nAgent saved to: {agent_path}")
-    logger.info("="*80)
+    logger.info("=" * 80)
 
 
 if __name__ == "__main__":

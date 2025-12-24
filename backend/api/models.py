@@ -46,7 +46,7 @@ class PatientInput(BaseModel):
                 "oldpeak": 2.3,
                 "slope": 2,
                 "ca": 0,
-                "thal": 6
+                "thal": 6,
             }
         }
     }
@@ -73,13 +73,7 @@ class RiskPrediction(BaseModel):
                 "classification": "High Risk",
                 "has_disease": True,
                 "probability": 0.785,
-                "feature_importance": {
-                    "thal": 0.166,
-                    "ca": 0.143,
-                    "cp": 0.123,
-                    "oldpeak": 0.108,
-                    "thalach": 0.091
-                }
+                "feature_importance": {"thal": 0.166, "ca": 0.143, "cp": 0.123, "oldpeak": 0.108, "thalach": 0.091},
             }
         }
     }
@@ -119,8 +113,8 @@ class InterventionRecommendation(BaseModel):
                     "Lifestyle Intervention": 0.45,
                     "Single Medication": 0.68,
                     "Combination Therapy": 0.92,
-                    "Intensive Treatment": 0.75
-                }
+                    "Intensive Treatment": 0.75,
+                },
             }
         }
     }
@@ -153,9 +147,9 @@ class SimulationRequest(BaseModel):
                     "oldpeak": 2.3,
                     "slope": 2,
                     "ca": 0,
-                    "thal": 6
+                    "thal": 6,
                 },
-                "action": 3
+                "action": 3,
             }
         }
     }
@@ -177,21 +171,11 @@ class HealthStatus(BaseModel):
     model_config = {
         "json_schema_extra": {
             "example": {
-                "current_metrics": {
-                    "trestbps": 145.0,
-                    "chol": 233.0,
-                    "thalach": 150.0,
-                    "oldpeak": 2.3
-                },
-                "optimized_metrics": {
-                    "trestbps": 123.3,
-                    "chol": 186.4,
-                    "thalach": 162.0,
-                    "oldpeak": 2.07
-                },
+                "current_metrics": {"trestbps": 145.0, "chol": 233.0, "thalach": 150.0, "oldpeak": 2.3},
+                "optimized_metrics": {"trestbps": 123.3, "chol": 186.4, "thalach": 162.0, "oldpeak": 2.07},
                 "current_risk": 78.5,
                 "expected_risk": 52.3,
-                "risk_reduction": 26.2
+                "risk_reduction": 26.2,
             }
         }
     }
@@ -205,14 +189,7 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Detailed error information")
 
-    model_config = {
-        "json_schema_extra": {
-            "example": {
-                "error": "Prediction failed",
-                "detail": "Model not loaded properly"
-            }
-        }
-    }
+    model_config = {"json_schema_extra": {"example": {"error": "Prediction failed", "detail": "Model not loaded properly"}}}
 
 
 class HealthCheckResponse(BaseModel):
@@ -229,10 +206,7 @@ class HealthCheckResponse(BaseModel):
             "example": {
                 "status": "healthy",
                 "message": "HealthGuard API is running",
-                "models_loaded": {
-                    "risk_predictor": True,
-                    "intervention_agent": True
-                }
+                "models_loaded": {"risk_predictor": True, "intervention_agent": True},
             }
         }
     }
