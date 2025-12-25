@@ -264,8 +264,8 @@ def ensure_risk_monotonicity(
     Ensure that interventions never paradoxically increase risk.
 
     If an intervention would increase risk (except for monitor-only),
-    this function returns the original metrics unchanged to prevent
-    paradoxical outcomes where improving health metrics worsens predictions.
+    this function caps the risk at the current level but still shows
+    the improved metrics to demonstrate the intervention's effects.
 
     Args:
         current_risk: Current risk score (0-100)
@@ -284,8 +284,10 @@ def ensure_risk_monotonicity(
     # For all interventions (actions 1-4), never allow risk to increase
     # This prevents paradoxical outcomes where improving BP/cholesterol increases risk
     # due to model artifacts or training data biases
+    # However, we ALWAYS show the optimized metrics to demonstrate intervention effects
     if new_risk > current_risk:
-        return current_risk, current_metrics
+        # Cap risk at current level but show improved metrics
+        return current_risk, optimized_metrics
 
     # If intervention successfully reduces risk, use the optimized metrics
     return new_risk, optimized_metrics

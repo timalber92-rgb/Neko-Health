@@ -13,8 +13,10 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        // Use backend service name in Docker, localhost for local dev
+        target: process.env.VITE_API_URL || "http://localhost:8000",
         changeOrigin: true,
+        secure: false,
       },
     },
   },

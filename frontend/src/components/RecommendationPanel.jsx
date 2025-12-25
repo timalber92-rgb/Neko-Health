@@ -251,9 +251,6 @@ export default function RecommendationPanel({ recommendation, patientData }) {
     description,
     cost,
     intensity,
-    current_risk,
-    expected_final_risk,
-    expected_risk_reduction,
     q_values,
     rationale,
     risk_factors,
@@ -374,33 +371,6 @@ export default function RecommendationPanel({ recommendation, patientData }) {
                 <span className="text-gray-600">{intensity}</span>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Expected Outcomes */}
-      <div className="mb-6">
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">
-          Expected Outcomes
-        </h4>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 bg-gray-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-gray-700">
-              {current_risk.toFixed(1)}%
-            </div>
-            <div className="text-sm text-gray-600">Current Risk</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded-lg text-center border-2 border-primary-500">
-            <div className="text-2xl font-bold text-primary-600">
-              {expected_final_risk.toFixed(1)}%
-            </div>
-            <div className="text-sm text-gray-600">Expected Risk</div>
-          </div>
-          <div className="p-4 bg-green-50 rounded-lg text-center">
-            <div className="text-2xl font-bold text-success-600">
-              -{expected_risk_reduction.toFixed(1)}%
-            </div>
-            <div className="text-sm text-gray-600">Risk Reduction</div>
           </div>
         </div>
       </div>
