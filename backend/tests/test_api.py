@@ -190,9 +190,25 @@ class TestRecommendEndpoint:
         assert 0 <= data["current_risk"] <= 100
         assert 0 <= data["expected_final_risk"] <= 100
 
-        # Q-values should be a dict with 5 entries
-        assert isinstance(data["q_values"], dict)
-        assert len(data["q_values"]) == 5
+        # Guideline recommender returns None for q_values, RL agent returns dict
+        # Both should be acceptable
+        if data["q_values"] is not None:
+            assert isinstance(data["q_values"], dict)
+            assert len(data["q_values"]) == 5
+
+        # Guideline recommender should provide rationale
+        assert "rationale" in data
+        if data["rationale"] is not None:
+            assert isinstance(data["rationale"], str)
+            assert len(data["rationale"]) > 0
+
+        # Guideline recommender should provide risk_factors
+        assert "risk_factors" in data
+        if data["risk_factors"] is not None:
+            assert isinstance(data["risk_factors"], dict)
+            assert "severe_count" in data["risk_factors"]
+            assert "moderate_count" in data["risk_factors"]
+            assert "details" in data["risk_factors"]
 
     def test_recommend_missing_field(self, client, valid_patient_data):
         """Test recommendation with missing required field"""

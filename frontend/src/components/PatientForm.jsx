@@ -10,7 +10,10 @@ import { useState } from "react";
 // Example patient data for quick testing
 const EXAMPLE_PATIENTS = {
   healthy: {
-    name: "Healthy Patient",
+    name: "James Chen",
+    subtitle: "Low Risk Profile",
+    image: "/patients/healthy.svg",
+    description: "45-year-old with healthy vitals and active lifestyle",
     data: {
       age: 45,
       sex: 1,
@@ -28,25 +31,10 @@ const EXAMPLE_PATIENTS = {
     },
   },
   moderate: {
-    name: "Moderate Risk Patient",
-    data: {
-      age: 58,
-      sex: 1,
-      cp: 2,
-      trestbps: 140,
-      chol: 230,
-      fbs: 0,
-      restecg: 0,
-      thalach: 150,
-      exang: 0,
-      oldpeak: 1.5,
-      slope: 2,
-      ca: 1,
-      thal: 6,
-    },
-  },
-  high: {
-    name: "High Risk Patient",
+    name: "Robert Martinez",
+    subtitle: "Moderate Risk Profile",
+    image: "/patients/moderate.svg",
+    description: "58-year-old with elevated cholesterol and blood pressure",
     data: {
       age: 63,
       sex: 1,
@@ -60,6 +48,27 @@ const EXAMPLE_PATIENTS = {
       oldpeak: 2.3,
       slope: 2,
       ca: 0,
+      thal: 6,
+    },
+  },
+  high: {
+    name: "William Thompson",
+    subtitle: "High Risk Profile",
+    image: "/patients/high.svg",
+    description: "63-year-old with multiple cardiovascular risk factors",
+    data: {
+      age: 58,
+      sex: 1,
+      cp: 2,
+      trestbps: 140,
+      chol: 230,
+      fbs: 0,
+      restecg: 0,
+      thalach: 150,
+      exang: 0,
+      oldpeak: 1.5,
+      slope: 2,
+      ca: 1,
       thal: 6,
     },
   },
@@ -209,9 +218,12 @@ const FIELD_CONFIG = [
 export default function PatientForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState(EXAMPLE_PATIENTS.moderate.data);
   const [errors, setErrors] = useState({});
+  const [selectedPatient, setSelectedPatient] = useState("moderate");
 
   const handleChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: parseFloat(value) }));
+    // Clear selected patient when manually editing
+    setSelectedPatient(null);
     // Clear error for this field
     if (errors[name]) {
       setErrors((prev) => {
@@ -254,6 +266,7 @@ export default function PatientForm({ onSubmit, loading }) {
 
   const loadExample = (exampleKey) => {
     setFormData(EXAMPLE_PATIENTS[exampleKey].data);
+    setSelectedPatient(exampleKey);
     setErrors({});
   };
 
@@ -268,22 +281,51 @@ export default function PatientForm({ onSubmit, loading }) {
         </p>
       </div>
 
-      {/* Example Data Buttons */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <span className="text-sm font-medium text-gray-700 mr-2">
-          Quick Load:
-        </span>
-        {Object.entries(EXAMPLE_PATIENTS).map(([key, { name }]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => loadExample(key)}
-            className="btn btn-secondary text-sm"
-            disabled={loading}
-          >
-            {name}
-          </button>
-        ))}
+      {/* Example Patient Profiles */}
+      <div className="mb-6">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          Sample Patient Profiles
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {Object.entries(EXAMPLE_PATIENTS).map(([key, patient]) => {
+            const isSelected = selectedPatient === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => loadExample(key)}
+                disabled={loading}
+                className={`p-4 bg-white border-2 rounded-lg transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isSelected
+                    ? "border-primary-500 bg-primary-50 shadow-md ring-2 ring-primary-200"
+                    : "border-gray-200 hover:border-primary-400 hover:shadow-md"
+                }`}
+              >
+                <div className="flex items-center mb-3">
+                  <img
+                    src={patient.image}
+                    alt={patient.name}
+                    className="w-16 h-16 rounded-full mr-3 group-hover:scale-110 transition-transform"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-800 text-sm">
+                        {patient.name}
+                      </h4>
+                      {isSelected && (
+                        <span className="ml-2 text-primary-600 text-xs font-semibold">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">{patient.subtitle}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600">{patient.description}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

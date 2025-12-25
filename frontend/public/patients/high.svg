@@ -1,0 +1,27 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="60" fill="#fee2e2"/>
+
+  <!-- Head -->
+  <circle cx="60" cy="45" r="20" fill="#c9a58a"/>
+
+  <!-- Hair (receding, gray) -->
+  <path d="M 42 45 Q 42 28 60 28 Q 78 28 78 45 Q 76 33 60 35 Q 44 33 42 45" fill="#a8a29e"/>
+
+  <!-- Eyes -->
+  <circle cx="53" cy="43" r="2" fill="#2c3e50"/>
+  <circle cx="67" cy="43" r="2" fill="#2c3e50"/>
+
+  <!-- Concerned expression -->
+  <path d="M 50 53 Q 60 51 70 53" stroke="#2c3e50" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Worry lines -->
+  <path d="M 48 36 Q 50 34 52 36" stroke="#8b7355" stroke-width="0.8" fill="none"/>
+  <path d="M 68 36 Q 70 34 72 36" stroke="#8b7355" stroke-width="0.8" fill="none"/>
+
+  <!-- Body (larger build) -->
+  <ellipse cx="60" cy="93" rx="33" ry="35" fill="#ef4444"/>
+
+  <!-- Heart icon overlay -->
+  <text x="60" y="106" font-size="20" text-anchor="middle">❤️</text>
+</svg>

@@ -25,13 +25,13 @@ from api.models import (
     SimulationRequest,
 )
 from api.rate_limit import RateLimitMiddleware
+from ml.guideline_recommender import GuidelineRecommender
 from ml.intervention_utils import apply_intervention_effects, ensure_risk_monotonicity
 from ml.risk_predictor import RiskPredictor
-from ml.rl_agent import InterventionAgent
 
 # Global model instances
 risk_predictor: RiskPredictor = None
-intervention_agent: InterventionAgent = None
+intervention_agent: GuidelineRecommender = None
 scaler = None
 
 
@@ -61,13 +61,15 @@ async def lifespan(app: FastAPI):
         else:
             logger.warning(f"Risk predictor not found at {settings.risk_predictor_path}")
 
-        # Load intervention agent
+        # Load intervention agent (guideline-based recommender)
+        # Note: GuidelineRecommender is rule-based and doesn't require loading saved models,
+        # but we support loading configuration for consistency
+        intervention_agent = GuidelineRecommender()
         if settings.intervention_agent_path.exists():
-            intervention_agent = InterventionAgent()
             intervention_agent.load(settings.intervention_agent_path)
-            logger.info(f"Loaded intervention agent from {settings.intervention_agent_path}")
+            logger.info(f"Loaded guideline recommender configuration from {settings.intervention_agent_path}")
         else:
-            logger.warning(f"Intervention agent not found at {settings.intervention_agent_path}")
+            logger.info("Using guideline recommender with default configuration (no training required)")
 
         # Load scaler
         if settings.scaler_path.exists():
@@ -211,11 +213,12 @@ async def predict_risk(patient: PatientInput):
 @app.post("/api/recommend", response_model=InterventionRecommendation, dependencies=[Depends(verify_api_key)])
 async def recommend_intervention(patient: PatientInput):
     """
-    Get RL-based intervention recommendation for a patient.
+    Get guideline-based intervention recommendation for a patient.
 
-    This endpoint uses the trained Q-learning agent to recommend the
-    optimal intervention strategy considering risk reduction, cost,
-    and quality of life.
+    This endpoint uses a clinical guideline-based recommender to recommend
+    the optimal intervention strategy based on risk stratification and
+    evidence-based medical guidelines. Provides explainable recommendations
+    with clinical rationale.
 
     Args:
         patient: Patient clinical data (13 features)
@@ -233,8 +236,12 @@ async def recommend_intervention(patient: PatientInput):
         # Normalize patient data
         patient_normalized = normalize_patient_data(patient)
 
-        # Get recommendation
-        recommendation = intervention_agent.recommend(patient_normalized, risk_predictor)
+        # Get denormalized data for accurate risk factor thresholding
+        patient_dict = patient.model_dump()
+        patient_raw = pd.DataFrame([patient_dict])
+
+        # Get guideline-based recommendation (pass both normalized and raw data)
+        recommendation = intervention_agent.recommend(patient_normalized, risk_predictor, denormalized_data=patient_raw)
 
         logger.info(
             f"Recommendation: {recommendation['action_name']} "

@@ -69,35 +69,37 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-gradient-to-r from-primary-600 to-blue-700 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">HealthGuard</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Predictive Health Monitoring with AI-Powered Intervention
-                Recommendations
-              </p>
+            <div className="flex items-center">
+              <div className="text-4xl mr-3">❤️</div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">HealthGuard</h1>
+                <p className="text-sm text-blue-100 mt-1">
+                  AI-Powered Cardiovascular Risk Assessment & Clinical Guidance
+                </p>
+              </div>
             </div>
 
             {/* API Status Indicator */}
             {apiHealth && (
-              <div className="flex items-center">
+              <div className="flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-lg backdrop-blur-sm">
                 <div
-                  className={`w-3 h-3 rounded-full mr-2 ${
+                  className={`w-2.5 h-2.5 rounded-full mr-2 ${
                     apiHealth.status === "healthy"
-                      ? "bg-green-500"
+                      ? "bg-green-400 animate-pulse"
                       : apiHealth.status === "degraded"
-                        ? "bg-yellow-500"
-                        : "bg-red-500"
+                        ? "bg-yellow-400"
+                        : "bg-red-400"
                   }`}
                 />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-white font-medium">
                   {apiHealth.status === "healthy"
-                    ? "API Connected"
+                    ? "System Online"
                     : apiHealth.status === "degraded"
-                      ? "API Degraded"
-                      : "API Unavailable"}
+                      ? "Limited Service"
+                      : "Offline"}
                 </span>
               </div>
             )}
@@ -130,16 +132,38 @@ function App() {
         )}
 
         {/* Introduction */}
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Cardiovascular Disease Risk Assessment
-          </h2>
-          <p className="text-gray-600 max-w-3xl mx-auto">
-            Enter patient clinical measurements to receive an AI-powered risk
-            assessment and personalized intervention recommendations. Our system
-            combines Random Forest prediction with Reinforcement Learning to
-            optimize treatment strategies.
-          </p>
+        <div className="mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="bg-gradient-to-r from-primary-100 to-blue-100 rounded-full p-4">
+                <span className="text-4xl">🩺</span>
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Cardiovascular Disease Risk Assessment
+            </h2>
+            <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Enter patient clinical measurements to receive an AI-powered risk
+              assessment and evidence-based intervention recommendations. Our
+              system combines Random Forest prediction with clinical
+              guideline-based recommendations to suggest optimal treatment
+              strategies.
+            </p>
+            <div className="mt-4 flex justify-center gap-6 text-sm">
+              <div className="flex items-center text-gray-600">
+                <span className="mr-2">✓</span>
+                <span>89% Accuracy</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <span className="mr-2">✓</span>
+                <span>ACC/AHA Guidelines</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <span className="mr-2">✓</span>
+                <span>Clinical Rationale</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Patient Form */}
@@ -158,6 +182,26 @@ function App() {
         {/* Results Section */}
         {(riskPrediction || recommendation) && (
           <div id="results" className="space-y-8">
+            {/* Patient Info Banner */}
+            {patientData && (
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="text-2xl mr-3">📊</div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700">
+                        Analysis Results
+                      </h3>
+                      <p className="text-xs text-gray-600">
+                        Patient: {patientData.age} years old,{" "}
+                        {patientData.sex === 1 ? "Male" : "Female"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Risk Display */}
             {riskPrediction && (
               <div className="animate-fadeIn">
@@ -195,11 +239,14 @@ function App() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-1">Intervention Agent</h4>
+              <h4 className="font-semibold mb-1">
+                Guideline-Based Recommendations
+              </h4>
               <p className="text-gray-600">
-                Q-Learning reinforcement learning agent that optimizes treatment
-                strategies by balancing risk reduction, treatment costs, and
-                quality of life impacts.
+                Evidence-based intervention recommender following ACC/AHA
+                clinical guidelines. Provides personalized treatment strategies
+                based on risk stratification and identified cardiovascular risk
+                factors.
               </p>
             </div>
           </div>

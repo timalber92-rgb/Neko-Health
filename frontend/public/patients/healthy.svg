@@ -1,0 +1,23 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="60" fill="#e0f2fe"/>
+
+  <!-- Head -->
+  <circle cx="60" cy="45" r="20" fill="#f8b195"/>
+
+  <!-- Hair -->
+  <path d="M 40 45 Q 40 25 60 25 Q 80 25 80 45 Q 78 30 60 30 Q 42 30 40 45" fill="#6b4423"/>
+
+  <!-- Eyes -->
+  <circle cx="53" cy="42" r="2" fill="#2c3e50"/>
+  <circle cx="67" cy="42" r="2" fill="#2c3e50"/>
+
+  <!-- Smile -->
+  <path d="M 50 50 Q 60 55 70 50" stroke="#2c3e50" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Body (athletic) -->
+  <ellipse cx="60" cy="90" rx="28" ry="32" fill="#4ade80"/>
+
+  <!-- Running icon overlay -->
+  <text x="60" y="102" font-size="20" text-anchor="middle">🏃</text>
+</svg>

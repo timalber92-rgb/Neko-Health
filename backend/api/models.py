@@ -5,7 +5,7 @@ This module defines the request/response schemas for the FastAPI backend.
 All models use Pydantic for automatic validation and serialization.
 """
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -80,9 +80,17 @@ class RiskPrediction(BaseModel):
     }
 
 
+class RiskFactorDetails(BaseModel):
+    """Risk factor details for intervention recommendation."""
+
+    severe_count: int = Field(..., description="Number of severe risk factors")
+    moderate_count: int = Field(..., description="Number of moderate risk factors")
+    details: List[str] = Field(..., description="List of specific risk factors identified")
+
+
 class InterventionRecommendation(BaseModel):
     """
-    Response model for RL-based intervention recommendation.
+    Response model for guideline-based intervention recommendation.
 
     Contains the recommended action, explanation, and expected outcomes
     to guide clinical decision-making.
@@ -96,7 +104,9 @@ class InterventionRecommendation(BaseModel):
     current_risk: float = Field(..., description="Current risk score (%)")
     expected_final_risk: float = Field(..., description="Expected risk after intervention (%)")
     expected_risk_reduction: float = Field(..., description="Expected reduction in risk (%)")
-    q_values: Dict[str, float] = Field(..., description="Q-values for all actions (for transparency)")
+    rationale: Optional[str] = Field(None, description="Clinical rationale for the recommendation")
+    risk_factors: Optional[RiskFactorDetails] = Field(None, description="Identified risk factors")
+    q_values: Optional[Dict[str, float]] = Field(None, description="Q-values for all actions (RL agent only)")
 
     model_config = {
         "json_schema_extra": {
@@ -109,13 +119,17 @@ class InterventionRecommendation(BaseModel):
                 "current_risk": 78.5,
                 "expected_final_risk": 52.3,
                 "expected_risk_reduction": 26.2,
-                "q_values": {
-                    "Monitor Only": 0.12,
-                    "Lifestyle Intervention": 0.45,
-                    "Single Medication": 0.68,
-                    "Combination Therapy": 0.92,
-                    "Intensive Treatment": 0.75,
+                "rationale": "Patient has high cardiovascular disease risk (78.5%). Identified 1 severe and 2 moderate risk factor(s). Specific factors: severe hypertension (BP: 160 mmHg), high cholesterol (233 mg/dL), exercise-induced angina. Recommended intervention: Combination Therapy. Combination therapy (medication + lifestyle) is guideline-recommended for high risk.",
+                "risk_factors": {
+                    "severe_count": 1,
+                    "moderate_count": 2,
+                    "details": [
+                        "severe hypertension (BP: 160 mmHg)",
+                        "high cholesterol (233 mg/dL)",
+                        "exercise-induced angina",
+                    ],
                 },
+                "q_values": None,
             }
         }
     }

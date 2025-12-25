@@ -151,7 +151,7 @@ class InterventionAgent:
 
         return tuple(state)
 
-    def get_action(self, state: Tuple, training: bool = False) -> int:
+    def get_action(self, state: Tuple, training: bool = False, current_risk: float = None) -> int:
         """
         Select action using epsilon-greedy policy.
 
@@ -161,6 +161,7 @@ class InterventionAgent:
         Args:
             state: Discrete state tuple
             training: If True, use epsilon-greedy; if False, use greedy policy
+            current_risk: Optional current risk score for handling unseen states
 
         Returns:
             Action index (0-4)
@@ -170,7 +171,29 @@ class InterventionAgent:
             action = np.random.randint(0, len(ACTIONS))
         else:
             # Exploit: best known action
-            action = int(np.argmax(self.q_table[state]))
+            # Check if state exists in Q-table (handle unseen states)
+            if state in self.q_table:
+                action = int(np.argmax(self.q_table[state]))
+            else:
+                # For unseen states during inference, use risk-based heuristic
+                # Initialize Q-table entry with zeros for future training
+                self.q_table[state] = np.zeros(len(ACTIONS))
+
+                # Use guideline-based heuristic for unseen states
+                if current_risk is not None:
+                    if current_risk >= 70:
+                        action = 4  # Intensive for very high risk
+                    elif current_risk >= 50:
+                        action = 3  # Combination for medium-high risk
+                    elif current_risk >= 30:
+                        action = 2  # Single med for low-medium risk
+                    elif current_risk >= 15:
+                        action = 1  # Lifestyle for low risk
+                    else:
+                        action = 0  # Monitor for very low risk
+                else:
+                    # If no risk provided, default to moderate intervention
+                    action = 2
 
         return action
 
@@ -375,7 +398,7 @@ class InterventionAgent:
         current_risk = current_prediction["risk_score"]
 
         # Get best action (greedy policy for inference)
-        action = self.get_action(state, training=False)
+        action = self.get_action(state, training=False, current_risk=current_risk)
         action_info = ACTIONS[action]
 
         # Simulate expected outcome
@@ -515,7 +538,10 @@ def main():
 
     # Train agent
     logger.info("\n[3/5] Training RL agent...")
-    stats = agent.train(train_df, predictor, episodes=10000)
+    # Get episodes from command line if provided
+    episodes = int(sys.argv[1]) if len(sys.argv) > 1 else 10000
+    logger.info(f"Training for {episodes} episodes...")
+    stats = agent.train(train_df, predictor, episodes=episodes)
 
     # Test on sample patients
     logger.info("\n[4/5] Testing recommendations on sample patients...")

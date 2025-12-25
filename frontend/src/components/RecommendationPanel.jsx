@@ -205,6 +205,8 @@ export default function RecommendationPanel({ recommendation, patientData }) {
     expected_final_risk,
     expected_risk_reduction,
     q_values,
+    rationale,
+    risk_factors,
   } = recommendation;
 
   const recommendedAction = ACTIONS[action];
@@ -230,6 +232,49 @@ export default function RecommendationPanel({ recommendation, patientData }) {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
         Recommended Intervention
       </h2>
+
+      {/* Clinical Rationale Section */}
+      {rationale && (
+        <div className="mb-6 p-5 bg-blue-50 border-l-4 border-primary-500 rounded-r-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
+            <span className="mr-2">🩺</span>
+            Clinical Assessment
+          </h3>
+          <p className="text-gray-700 leading-relaxed">{rationale}</p>
+        </div>
+      )}
+
+      {/* Risk Factors Section */}
+      {risk_factors &&
+        risk_factors.details &&
+        risk_factors.details.length > 0 && (
+          <div className="mb-6 p-5 bg-amber-50 border-l-4 border-warning-500 rounded-r-lg">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+              <span className="mr-2">⚠️</span>
+              Identified Risk Factors
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {risk_factors.severe_count > 0 && (
+                <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                  {risk_factors.severe_count} Severe
+                </span>
+              )}
+              {risk_factors.moderate_count > 0 && (
+                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                  {risk_factors.moderate_count} Moderate
+                </span>
+              )}
+            </div>
+            <ul className="space-y-1">
+              {risk_factors.details.map((factor, index) => (
+                <li key={index} className="text-gray-700 flex items-start">
+                  <span className="mr-2 text-warning-600">•</span>
+                  <span className="capitalize">{factor}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
       {/* Recommended Action */}
       <div className="p-6 bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg border-2 border-primary-500 mb-6">
@@ -366,9 +411,10 @@ export default function RecommendationPanel({ recommendation, patientData }) {
       {/* Information Box */}
       <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
         <p className="text-sm text-gray-700">
-          <strong>Note:</strong> This is an AI-powered recommendation based on
-          reinforcement learning. Always consult with healthcare professionals
-          before making medical decisions.
+          <strong>Note:</strong> These recommendations are based on established
+          clinical guidelines and AI risk assessment. This is a demonstration
+          system - always consult with healthcare professionals before making
+          medical decisions.
         </p>
       </div>
     </div>
