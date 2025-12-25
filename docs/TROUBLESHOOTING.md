@@ -89,3 +89,136 @@ python -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 **Cause**: Browser extensions (Google toolbar, etc.) injecting their own stylesheets
 
 **Solution**: This is a false positive and does not affect the application. Can be ignored or disable browser extensions temporarily to verify.
+
+---
+
+## Git Push Authentication Issues
+
+**Symptom**: `git push` fails with "Repository not found" error even though the repository exists on GitHub.
+
+**Error Message**:
+```
+remote: Repository not found.
+fatal: repository 'https://github.com/timalber92-rgb/Neko-Health.git/' not found
+```
+
+**Root Cause**: The devcontainer environment doesn't have GitHub credentials configured. GitHub requires authentication to push to repositories, especially for private repos.
+
+**Solutions**:
+
+### Option 1: Use GitHub CLI (Recommended)
+```bash
+# Install GitHub CLI if not available
+gh auth login
+# Follow the prompts to authenticate
+git push origin main
+```
+
+### Option 2: Use Personal Access Token (PAT)
+1. Create a Personal Access Token on GitHub:
+   - Go to: https://github.com/settings/tokens
+   - Click "Generate new token (classic)"
+   - Select scopes: `repo` (full control of private repositories)
+   - Copy the token
+
+2. Configure Git credentials:
+   ```bash
+   git config --global credential.helper store
+   git push origin main
+   # When prompted, use your GitHub username and the PAT as password
+   ```
+
+### Option 3: Use SSH Keys (Working Solution for Private Repos)
+
+This is the verified solution that works in the devcontainer environment:
+
+1. **Generate SSH key** (if not already exists):
+   ```bash
+   ssh-keygen -t ed25519 -C "neko-health-devcontainer" -f ~/.ssh/id_ed25519 -N ""
+   ```
+
+2. **Start SSH agent and add the key**:
+   ```bash
+   eval "$(ssh-agent -s)"
+   ssh-add ~/.ssh/id_ed25519
+   ```
+
+3. **Display your public key**:
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   ```
+   Copy the entire output (starts with `ssh-ed25519`)
+
+4. **Add the public key to GitHub**:
+   - Go to: https://github.com/settings/ssh/new
+   - Title: `Neko-Health DevContainer` (or any name)
+   - Paste the public key into the "Key" field
+   - Click "Add SSH key"
+
+5. **Update remote URL to use SSH**:
+   ```bash
+   git remote set-url origin git@github.com:timalber92-rgb/Neko-Health.git
+   git remote -v  # Verify the remote is set correctly
+   ```
+
+6. **Clear old SSH keys and ensure the new key is loaded**:
+   ```bash
+   ssh-add -D  # Remove all keys
+   ssh-add ~/.ssh/id_ed25519  # Add the new key
+   ssh-add -l  # Verify the correct key is loaded
+   ```
+
+7. **Push to GitHub**:
+   ```bash
+   git push origin main
+   ```
+
+### Troubleshooting SSH Key Issues
+
+**Problem**: Push fails even after adding SSH key to GitHub
+
+**Cause**: Multiple SSH keys in the agent, and Git is using the wrong one
+
+**Solution**:
+```bash
+# Clear all SSH keys from the agent
+ssh-add -D
+
+# Add only the correct key
+ssh-add ~/.ssh/id_ed25519
+
+# Verify the correct key is loaded
+ssh-add -l
+
+# Should show: 256 SHA256:... neko-health-devcontainer (ED25519)
+
+# Test GitHub connection
+ssh -T git@github.com
+# Should show: Hi timalber92-rgb/... You've successfully authenticated
+
+# Now push
+git push origin main
+```
+
+### Reconnecting Git Remote
+
+If the remote connection is lost:
+```bash
+git remote remove origin
+git remote add origin git@github.com:timalber92-rgb/Neko-Health.git
+git remote -v  # Verify the remote is set correctly
+```
+
+**Repository URL**:
+- HTTPS: https://github.com/timalber92-rgb/Neko-Health.git
+- SSH: git@github.com:timalber92-rgb/Neko-Health.git (recommended)
+
+**Note**: After authenticating and pushing successfully, Vercel will automatically detect the new commits and trigger a deployment to https://neko-health.vercel.app/
+
+### Deployment Workflow
+
+1. Make code changes locally
+2. Commit changes: `git commit -am "your message"`
+3. Push to GitHub: `git push origin main`
+4. Vercel automatically detects the push and deploys (1-3 minutes)
+5. Check deployment at https://neko-health.vercel.app/
