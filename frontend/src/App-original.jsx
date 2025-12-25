@@ -144,9 +144,10 @@ function App() {
             </h2>
             <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
               Enter patient clinical measurements to receive an AI-powered risk
-              assessment and evidence-based intervention recommendations. This system
-              predicts <strong>Coronary Artery Disease (CAD)</strong> — the narrowing of arteries
-              that supply blood to your heart — and recommends personalized treatment strategies.
+              assessment and evidence-based intervention recommendations. This
+              system predicts <strong>Coronary Artery Disease (CAD)</strong> —
+              the narrowing of arteries that supply blood to your heart — and
+              recommends personalized treatment strategies.
             </p>
 
             {/* Demo Information Box */}
@@ -157,21 +158,31 @@ function App() {
               </h3>
               <div className="space-y-2 text-sm text-gray-700">
                 <p>
-                  <strong>What it predicts:</strong> Probability of ≥50% narrowing in coronary arteries (clinical threshold for significant CAD), validated by angiography
+                  <strong>What it predicts:</strong> Probability of ≥50%
+                  narrowing in coronary arteries (clinical threshold for
+                  significant CAD), validated by angiography
                 </p>
                 <p>
-                  <strong>How it works:</strong> Random Forest classifier analyzes 13 cardiovascular risk factors, then applies ACC/AHA clinical guidelines to recommend interventions (lifestyle changes, medications, or intensive treatment)
+                  <strong>How it works:</strong> Random Forest classifier
+                  analyzes 13 cardiovascular risk factors, then applies ACC/AHA
+                  clinical guidelines to recommend interventions (lifestyle
+                  changes, medications, or intensive treatment)
                 </p>
                 <p>
-                  <strong>Dataset:</strong> UCI Heart Disease Dataset — 303 patients from Cleveland Clinic with angiography-confirmed diagnoses
+                  <strong>Dataset:</strong> UCI Heart Disease Dataset — 303
+                  patients from Cleveland Clinic with angiography-confirmed
+                  diagnoses
                 </p>
                 <p>
-                  <strong>Performance:</strong> 89% accuracy, 94.5% ROC-AUC on validation data
+                  <strong>Performance:</strong> 89% accuracy, 94.5% ROC-AUC on
+                  validation data
                 </p>
               </div>
               <p className="text-xs text-amber-700 mt-3 italic bg-amber-50 p-2 rounded border border-amber-200">
-                ⚠️ <strong>Demonstration Only:</strong> This is a portfolio project showing how ML can be applied to healthcare.
-                Not validated for clinical use — always consult healthcare professionals for medical decisions.
+                ⚠️ <strong>Demonstration Only:</strong> This is a portfolio
+                project showing how ML can be applied to healthcare. Not
+                validated for clinical use — always consult healthcare
+                professionals for medical decisions.
               </p>
             </div>
 

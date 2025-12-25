@@ -29,7 +29,8 @@ const ACTIONS = [
     icon: "👁️",
     description: "Quarterly checkups with no active intervention",
     medications: [],
-    details: "Regular cardiovascular check-ups every 3 months. No active medications prescribed."
+    details:
+      "Regular cardiovascular check-ups every 3 months. No active medications prescribed.",
   },
   {
     id: 1,
@@ -37,31 +38,45 @@ const ACTIONS = [
     icon: "🏃",
     description: "Diet and exercise program with regular monitoring",
     medications: [],
-    details: "Structured exercise program (150 min/week moderate activity), Mediterranean diet, smoking cessation support."
+    details:
+      "Structured exercise program (150 min/week moderate activity), Mediterranean diet, smoking cessation support.",
   },
   {
     id: 2,
     name: "Single Medication",
     icon: "💊",
     description: "Single medication targeting cholesterol or blood pressure",
-    medications: ["Statin (e.g., Atorvastatin 10-20mg) OR Beta-blocker (e.g., Metoprolol 50mg)"],
-    details: "Single medication to manage either cholesterol or blood pressure, combined with lifestyle counseling."
+    medications: [
+      "Statin (e.g., Atorvastatin 10-20mg) OR Beta-blocker (e.g., Metoprolol 50mg)",
+    ],
+    details:
+      "Single medication to manage either cholesterol or blood pressure, combined with lifestyle counseling.",
   },
   {
     id: 3,
     name: "Combination Therapy",
     icon: "💊🏃",
     description: "Multiple medications plus supervised lifestyle program",
-    medications: ["Statin (e.g., Atorvastatin 40mg)", "ACE Inhibitor (e.g., Lisinopril 10mg) OR Beta-blocker"],
-    details: "Combination of cholesterol-lowering and blood pressure medication, plus supervised lifestyle program."
+    medications: [
+      "Statin (e.g., Atorvastatin 40mg)",
+      "ACE Inhibitor (e.g., Lisinopril 10mg) OR Beta-blocker",
+    ],
+    details:
+      "Combination of cholesterol-lowering and blood pressure medication, plus supervised lifestyle program.",
   },
   {
     id: 4,
     name: "Intensive Treatment",
     icon: "🏥",
     description: "Multiple medications with intensive lifestyle management",
-    medications: ["High-dose Statin (e.g., Atorvastatin 80mg)", "ACE Inhibitor OR ARB", "Beta-blocker", "Antiplatelet (e.g., Aspirin 81mg)"],
-    details: "Multiple medications targeting cholesterol, blood pressure, and blood clotting, with intensive lifestyle coaching and cardiology follow-up."
+    medications: [
+      "High-dose Statin (e.g., Atorvastatin 80mg)",
+      "ACE Inhibitor OR ARB",
+      "Beta-blocker",
+      "Antiplatelet (e.g., Aspirin 81mg)",
+    ],
+    details:
+      "Multiple medications targeting cholesterol, blood pressure, and blood clotting, with intensive lifestyle coaching and cardiology follow-up.",
   },
 ];
 
@@ -74,10 +89,13 @@ const METRIC_LABELS = {
 };
 
 const METRIC_DESCRIPTIONS = {
-  trestbps: "High pressure damages artery walls over time, promoting plaque buildup",
+  trestbps:
+    "High pressure damages artery walls over time, promoting plaque buildup",
   chol: "Excess cholesterol forms plaques that narrow arteries and restrict blood flow",
-  thalach: "Lower rates may indicate reduced cardiac capacity or blocked arteries",
-  oldpeak: "Higher values show more severe oxygen deprivation to heart muscle during exertion",
+  thalach:
+    "Lower rates may indicate reduced cardiac capacity or blocked arteries",
+  oldpeak:
+    "Higher values show more severe oxygen deprivation to heart muscle during exertion",
 };
 
 function MetricComparison({ simulation }) {
@@ -319,21 +337,25 @@ export default function RecommendationPanel({ recommendation, patientData }) {
             <p className="text-gray-700 mb-3">{description}</p>
 
             {/* Medications Section */}
-            {recommendedAction.medications && recommendedAction.medications.length > 0 && (
-              <div className="mb-3 p-3 bg-white rounded-lg border border-primary-200">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">
-                  💊 Medications:
-                </h4>
-                <ul className="space-y-1">
-                  {recommendedAction.medications.map((med, index) => (
-                    <li key={index} className="text-sm text-gray-700 flex items-start">
-                      <span className="mr-2 text-primary-600">•</span>
-                      <span>{med}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {recommendedAction.medications &&
+              recommendedAction.medications.length > 0 && (
+                <div className="mb-3 p-3 bg-white rounded-lg border border-primary-200">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                    💊 Medications:
+                  </h4>
+                  <ul className="space-y-1">
+                    {recommendedAction.medications.map((med, index) => (
+                      <li
+                        key={index}
+                        className="text-sm text-gray-700 flex items-start"
+                      >
+                        <span className="mr-2 text-primary-600">•</span>
+                        <span>{med}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
             {/* Details */}
             {recommendedAction.details && (

@@ -59,8 +59,8 @@ function App() {
               Coronary Artery Disease Risk Prediction
             </h2>
             <p className="text-gray-600 max-w-3xl mx-auto">
-              Enter patient clinical measurements to receive AI-powered risk assessment
-              and evidence-based intervention recommendations.
+              Enter patient clinical measurements to receive AI-powered risk
+              assessment and evidence-based intervention recommendations.
             </p>
           </div>
         </div>
