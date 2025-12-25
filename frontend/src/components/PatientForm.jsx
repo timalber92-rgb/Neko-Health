@@ -84,7 +84,7 @@ const FIELD_CONFIG = [
     max: 120,
     step: 1,
     unit: "years",
-    help: "Patient age in years",
+    help: "Risk increases with age as arteries stiffen and plaque accumulates over time (critical after 45 for men, 55 for women)",
   },
   {
     name: "sex",
@@ -94,7 +94,7 @@ const FIELD_CONFIG = [
       { value: 0, label: "Female" },
       { value: 1, label: "Male" },
     ],
-    help: "Biological sex",
+    help: "Men have higher early risk due to lower estrogen; women's risk rises after menopause when estrogen protection decreases",
   },
   {
     name: "cp",
@@ -106,7 +106,7 @@ const FIELD_CONFIG = [
       { value: 3, label: "Type 3 - Non-Anginal Pain" },
       { value: 4, label: "Type 4 - Asymptomatic" },
     ],
-    help: "Type of chest pain experienced",
+    help: "Typical angina (pressure/tightness during exertion, relieved by rest) strongly suggests blocked arteries reducing oxygen to heart",
   },
   {
     name: "trestbps",
@@ -116,7 +116,7 @@ const FIELD_CONFIG = [
     max: 250,
     step: 1,
     unit: "mm Hg",
-    help: "Resting blood pressure on admission to hospital",
+    help: "High pressure damages artery walls, promoting plaque buildup (Normal: <120, Elevated: 120-129, High: ≥130)",
   },
   {
     name: "chol",
@@ -126,7 +126,7 @@ const FIELD_CONFIG = [
     max: 600,
     step: 1,
     unit: "mg/dl",
-    help: "Serum cholesterol level",
+    help: "Excess cholesterol deposits in artery walls, forming plaques that narrow vessels and restrict blood flow (high: ≥240)",
   },
   {
     name: "fbs",
@@ -136,7 +136,7 @@ const FIELD_CONFIG = [
       { value: 0, label: "≤ 120 mg/dl (Normal)" },
       { value: 1, label: "> 120 mg/dl (Elevated)" },
     ],
-    help: "Fasting blood sugar level",
+    help: "High blood sugar damages blood vessels and nerves over time, accelerating atherosclerosis (>120 indicates diabetes risk)",
   },
   {
     name: "restecg",
@@ -147,7 +147,7 @@ const FIELD_CONFIG = [
       { value: 1, label: "ST-T Wave Abnormality" },
       { value: 2, label: "Left Ventricular Hypertrophy" },
     ],
-    help: "Resting electrocardiographic results",
+    help: "Abnormalities reveal heart strain from working harder (hypertrophy) or insufficient blood flow causing electrical changes",
   },
   {
     name: "thalach",
@@ -157,7 +157,7 @@ const FIELD_CONFIG = [
     max: 250,
     step: 1,
     unit: "bpm",
-    help: "Maximum heart rate achieved during exercise test",
+    help: "Lower maximum rate during stress test suggests heart can't pump efficiently due to weak muscle or blocked arteries",
   },
   {
     name: "exang",
@@ -167,7 +167,7 @@ const FIELD_CONFIG = [
       { value: 0, label: "No" },
       { value: 1, label: "Yes" },
     ],
-    help: "Exercise induced chest pain",
+    help: "Pain during exertion indicates narrowed arteries can't deliver enough oxygen when heart demands increase during activity",
   },
   {
     name: "oldpeak",
@@ -177,7 +177,7 @@ const FIELD_CONFIG = [
     max: 10,
     step: 0.1,
     unit: "mm",
-    help: "ST depression induced by exercise relative to rest",
+    help: "ECG dip during exercise shows heart muscle not getting enough oxygen (ischemia). Greater depression = more severe blockage",
   },
   {
     name: "slope",
@@ -188,7 +188,7 @@ const FIELD_CONFIG = [
       { value: 2, label: "Flat" },
       { value: 3, label: "Downsloping" },
     ],
-    help: "Slope of peak exercise ST segment",
+    help: "ECG pattern shape at peak exercise. Downsloping/flat indicates heart struggling to get oxygen; upsloping is healthier response",
   },
   {
     name: "ca",
@@ -200,7 +200,7 @@ const FIELD_CONFIG = [
       { value: 2, label: "2 vessels" },
       { value: 3, label: "3 vessels" },
     ],
-    help: "Number of major vessels colored by fluoroscopy",
+    help: "Fluoroscopy reveals blocked coronary arteries. More blocked vessels = less blood reaching heart muscle = higher risk",
   },
   {
     name: "thal",
@@ -211,7 +211,7 @@ const FIELD_CONFIG = [
       { value: 6, label: "Fixed Defect" },
       { value: 7, label: "Reversible Defect" },
     ],
-    help: "Thalassemia blood disorder status",
+    help: "Nuclear scan shows heart perfusion. Fixed defects indicate permanent damage (scar); reversible means blockage reduces blood flow",
   },
 ];
 

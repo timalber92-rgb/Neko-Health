@@ -21,46 +21,63 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// Action definitions matching backend
+// Action definitions with specific medications
 const ACTIONS = [
   {
     id: 0,
     name: "Monitor Only",
     icon: "👁️",
     description: "Quarterly checkups with no active intervention",
+    medications: [],
+    details: "Regular cardiovascular check-ups every 3 months. No active medications prescribed."
   },
   {
     id: 1,
     name: "Lifestyle Intervention",
     icon: "🏃",
     description: "Diet and exercise program with regular monitoring",
+    medications: [],
+    details: "Structured exercise program (150 min/week moderate activity), Mediterranean diet, smoking cessation support."
   },
   {
     id: 2,
     name: "Single Medication",
     icon: "💊",
-    description: "Single medication (e.g., statin or beta-blocker)",
+    description: "Single medication targeting cholesterol or blood pressure",
+    medications: ["Statin (e.g., Atorvastatin 10-20mg) OR Beta-blocker (e.g., Metoprolol 50mg)"],
+    details: "Single medication to manage either cholesterol or blood pressure, combined with lifestyle counseling."
   },
   {
     id: 3,
     name: "Combination Therapy",
     icon: "💊🏃",
-    description: "Medication plus supervised lifestyle program",
+    description: "Multiple medications plus supervised lifestyle program",
+    medications: ["Statin (e.g., Atorvastatin 40mg)", "ACE Inhibitor (e.g., Lisinopril 10mg) OR Beta-blocker"],
+    details: "Combination of cholesterol-lowering and blood pressure medication, plus supervised lifestyle program."
   },
   {
     id: 4,
     name: "Intensive Treatment",
     icon: "🏥",
     description: "Multiple medications with intensive lifestyle management",
+    medications: ["High-dose Statin (e.g., Atorvastatin 80mg)", "ACE Inhibitor OR ARB", "Beta-blocker", "Antiplatelet (e.g., Aspirin 81mg)"],
+    details: "Multiple medications targeting cholesterol, blood pressure, and blood clotting, with intensive lifestyle coaching and cardiology follow-up."
   },
 ];
 
-// Metric labels for display
+// Metric labels and descriptions for display
 const METRIC_LABELS = {
   trestbps: "Blood Pressure (mm Hg)",
   chol: "Cholesterol (mg/dl)",
   thalach: "Max Heart Rate (bpm)",
   oldpeak: "ST Depression (mm)",
+};
+
+const METRIC_DESCRIPTIONS = {
+  trestbps: "High pressure damages artery walls over time, promoting plaque buildup",
+  chol: "Excess cholesterol forms plaques that narrow arteries and restrict blood flow",
+  thalach: "Lower rates may indicate reduced cardiac capacity or blocked arteries",
+  oldpeak: "Higher values show more severe oxygen deprivation to heart muscle during exertion",
 };
 
 function MetricComparison({ simulation }) {
@@ -137,6 +154,21 @@ function MetricComparison({ simulation }) {
             -{risk_reduction.toFixed(1)}%
           </div>
           <div className="text-sm text-gray-600">Risk Reduction</div>
+        </div>
+      </div>
+
+      {/* Metric Descriptions */}
+      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h5 className="text-sm font-semibold text-gray-800 mb-2">
+          Understanding Key Metrics:
+        </h5>
+        <div className="space-y-2">
+          {Object.keys(current_metrics).map((key) => (
+            <div key={key} className="text-xs text-gray-700">
+              <span className="font-semibold">{METRIC_LABELS[key]}:</span>{" "}
+              {METRIC_DESCRIPTIONS[key]}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -285,6 +317,31 @@ export default function RecommendationPanel({ recommendation, patientData }) {
               {action_name}
             </h3>
             <p className="text-gray-700 mb-3">{description}</p>
+
+            {/* Medications Section */}
+            {recommendedAction.medications && recommendedAction.medications.length > 0 && (
+              <div className="mb-3 p-3 bg-white rounded-lg border border-primary-200">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">
+                  💊 Medications:
+                </h4>
+                <ul className="space-y-1">
+                  {recommendedAction.medications.map((med, index) => (
+                    <li key={index} className="text-sm text-gray-700 flex items-start">
+                      <span className="mr-2 text-primary-600">•</span>
+                      <span>{med}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Details */}
+            {recommendedAction.details && (
+              <p className="text-sm text-gray-600 mb-3 italic">
+                {recommendedAction.details}
+              </p>
+            )}
+
             <div className="flex flex-wrap gap-4 text-sm">
               <div>
                 <span className="font-semibold text-gray-700">Cost:</span>{" "}

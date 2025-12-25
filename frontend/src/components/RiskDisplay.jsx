@@ -204,21 +204,23 @@ export default function RiskDisplay({ prediction }) {
             {has_disease ? (
               <>
                 <span className="font-semibold text-danger-600">
-                  Cardiovascular disease detected
+                  Significant coronary artery disease detected
                 </span>
                 <br />
                 <span className="text-sm text-gray-600">
-                  Based on clinical features, intervention recommended
+                  Angiographic risk indicators suggest ≥50% vessel narrowing -
+                  intervention recommended
                 </span>
               </>
             ) : (
               <>
                 <span className="font-semibold text-success-600">
-                  No disease detected
+                  No significant coronary artery disease detected
                 </span>
                 <br />
                 <span className="text-sm text-gray-600">
-                  Continue monitoring and maintain healthy lifestyle
+                  Clinical indicators show &lt;50% vessel narrowing - continue
+                  monitoring and maintain healthy lifestyle
                 </span>
               </>
             )}
@@ -233,12 +235,113 @@ export default function RiskDisplay({ prediction }) {
 
       {/* Explanation */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <p className="text-sm text-gray-700">
-          <strong>How to interpret:</strong> The risk score represents the
-          probability of cardiovascular disease based on your clinical
-          measurements. The top risk factors show which features contribute most
-          to this prediction.
-        </p>
+        <div className="mb-3">
+          <h4 className="text-sm font-bold text-gray-800 mb-2">
+            What does this risk score mean?
+          </h4>
+          <p className="text-sm text-gray-700 mb-2">
+            This score represents the probability of{" "}
+            <strong>Coronary Artery Disease (CAD)</strong> - significant
+            narrowing (≥50% blockage) in the arteries that supply blood to your
+            heart muscle.
+          </p>
+        </div>
+
+        {/* Life Quality and Expectancy Impact */}
+        <div className="mb-3 p-3 bg-amber-50 rounded-lg border border-amber-300">
+          <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center">
+            <span className="mr-2">⚠️</span>
+            Impact on Life Quality and Life Expectancy:
+          </h4>
+          <div className="space-y-2">
+            <div>
+              <p className="text-xs font-semibold text-gray-800 mb-1">
+                Quality of Life:
+              </p>
+              <ul className="text-xs text-gray-700 ml-4 space-y-0.5">
+                <li>
+                  • <strong>Physical Limitations:</strong> Reduced exercise
+                  tolerance, fatigue during daily activities
+                </li>
+                <li>
+                  • <strong>Angina Symptoms:</strong> Frequent chest pain
+                  limiting work, travel, and recreation
+                </li>
+                <li>
+                  • <strong>Psychological Impact:</strong> Anxiety about heart
+                  events, depression from activity restrictions
+                </li>
+                <li>
+                  • <strong>Treatment Burden:</strong> Daily medications,
+                  frequent doctor visits, potential procedures (stents, bypass)
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-gray-800 mb-1">
+                Life Expectancy:
+              </p>
+              <ul className="text-xs text-gray-700 ml-4 space-y-0.5">
+                <li>
+                  • <strong>Untreated CAD:</strong> Reduces life expectancy by
+                  7-10 years on average, with 3-5x higher risk of heart attack
+                </li>
+                <li>
+                  • <strong>With Treatment:</strong> Modern interventions can
+                  restore near-normal life expectancy if started early
+                </li>
+                <li>
+                  • <strong>Post-Heart Attack:</strong> 5-year survival rate is
+                  ~75%, with higher risk of recurrent events
+                </li>
+              </ul>
+            </div>
+            <div className="pt-2 mt-2 border-t border-amber-300">
+              <p className="text-xs font-semibold text-green-700">
+                ✓ Good News: Early detection and intervention dramatically
+                improve outcomes
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <h4 className="text-sm font-bold text-gray-800 mb-2">
+            What conditions could develop?
+          </h4>
+          <p className="text-sm text-gray-700 mb-2">
+            If left untreated, coronary artery disease can lead to:
+          </p>
+          <ul className="text-sm text-gray-700 ml-4 space-y-1">
+            <li>
+              • <strong>Angina</strong> - chest pain or discomfort due to
+              reduced blood flow
+            </li>
+            <li>
+              • <strong>Heart Attack (Myocardial Infarction)</strong> - if a
+              coronary artery becomes completely blocked
+            </li>
+            <li>
+              • <strong>Heart Failure</strong> - weakened heart muscle from
+              chronic oxygen deprivation
+            </li>
+            <li>
+              • <strong>Arrhythmias</strong> - irregular heartbeats due to
+              damaged heart tissue
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-bold text-gray-800 mb-2">
+            Understanding the top risk factors:
+          </h4>
+          <p className="text-sm text-gray-700">
+            The chart above shows which of your clinical measurements contribute
+            most to this prediction. Higher importance means that factor has
+            more influence on your individual risk assessment.
+          </p>
+        </div>
       </div>
     </div>
   );

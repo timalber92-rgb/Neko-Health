@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+</head>
+<body>
+    <h1>Test Page</h1>
+    <script>
+        console.log('Test page loaded');
+        fetch('http://localhost:8000/')
+            .then(r => r.json())
+            .then(data => {
+                console.log('API response:', data);
+                document.body.innerHTML += '<p>API Status: ' + data.status + '</p>';
+            })
+            .catch(err => {
+                console.error('API Error:', err);
+                document.body.innerHTML += '<p>API Error: ' + err.message + '</p>';
+            });
+    </script>
+</body>
+</html>
