@@ -172,28 +172,31 @@ class InterventionAgent:
         else:
             # Exploit: best known action
             # Check if state exists in Q-table (handle unseen states)
-            if state in self.q_table:
-                action = int(np.argmax(self.q_table[state]))
-            else:
+            if state not in self.q_table:
                 # For unseen states during inference, use risk-based heuristic
-                # Initialize Q-table entry with zeros for future training
-                self.q_table[state] = np.zeros(len(ACTIONS))
-
-                # Use guideline-based heuristic for unseen states
+                # Initialize Q-table entry with heuristic-based Q-values
                 if current_risk is not None:
                     if current_risk >= 70:
-                        action = 4  # Intensive for very high risk
+                        default_action = 4  # Intensive for very high risk
                     elif current_risk >= 50:
-                        action = 3  # Combination for medium-high risk
+                        default_action = 3  # Combination for medium-high risk
                     elif current_risk >= 30:
-                        action = 2  # Single med for low-medium risk
+                        default_action = 2  # Single med for low-medium risk
                     elif current_risk >= 15:
-                        action = 1  # Lifestyle for low risk
+                        default_action = 1  # Lifestyle for low risk
                     else:
-                        action = 0  # Monitor for very low risk
+                        default_action = 0  # Monitor for very low risk
                 else:
                     # If no risk provided, default to moderate intervention
-                    action = 2
+                    default_action = 2
+
+                # Initialize Q-values with small preference for heuristic action
+                # This ensures deterministic behavior while allowing future learning
+                self.q_table[state] = np.zeros(len(ACTIONS))
+                self.q_table[state][default_action] = 0.1
+
+            # Always use argmax for consistent behavior
+            action = int(np.argmax(self.q_table[state]))
 
         return action
 
