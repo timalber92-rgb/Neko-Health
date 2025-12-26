@@ -15,13 +15,14 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // API Key from environment (for authenticated requests)
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-// Debug logging
-console.log('🔧 API Configuration:', {
-  baseURL: API_BASE_URL,
-  hasApiKey: !!API_KEY,
-  mode: import.meta.env.MODE,
-  allEnvVars: import.meta.env,
-});
+// Debug logging (only in development)
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:', {
+    baseURL: API_BASE_URL,
+    hasApiKey: !!API_KEY,
+    mode: import.meta.env.MODE,
+  });
+}
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -34,10 +35,12 @@ const apiClient = axios.create({
   timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor for logging
+// Request interceptor for logging (only in development)
 apiClient.interceptors.request.use(
   (config) => {
-    console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`);
+    if (import.meta.env.DEV) {
+      console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`);
+    }
     return config;
   },
   (error) => {
@@ -49,7 +52,9 @@ apiClient.interceptors.request.use(
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
-    console.log(`[API Response] ${response.config.url} - ${response.status}`);
+    if (import.meta.env.DEV) {
+      console.log(`[API Response] ${response.config.url} - ${response.status}`);
+    }
     return response;
   },
   (error) => {
