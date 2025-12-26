@@ -13,14 +13,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ### Build & Test Status
-[![Backend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml)
-[![CI/CD Pipeline](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml)
+[![Backend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml)
+[![CI/CD Pipeline](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml)
 
 ### Security & Quality
-[![CodeQL](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml)
-[![Security Audit](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml)
-[![Dependency Updates](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml)
+[![CodeQL](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml)
+[![Security Audit](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml)
+[![Dependency Updates](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml/badge.svg?branch=main)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml)
 
 ## Overview
 
