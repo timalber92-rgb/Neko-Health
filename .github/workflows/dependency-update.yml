@@ -1,6 +1,10 @@
 name: Dependency Updates & Health Check
 
 on:
+  # Run on push to main branch
+  push:
+    branches: [main]
+
   # Run weekly on Monday at 10 AM UTC
   schedule:
     - cron: '0 10 * * 1'
