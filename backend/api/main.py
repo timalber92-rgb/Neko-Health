@@ -353,7 +353,8 @@ async def simulate_intervention(request: SimulationRequest):
             modifiable_features=modifiable_features,
         )
 
-        logger.info("Simulation: Action %d, Risk %.1f%% → %.1f%%", request.action, current_risk, final_risk)
+        safe_action = str(request.action).replace("\r", "").replace("\n", "")
+        logger.info("Simulation: Action %s, Risk %.1f%% → %.1f%%", safe_action, current_risk, final_risk)
 
         return result
 
