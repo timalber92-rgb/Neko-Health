@@ -338,14 +338,6 @@ class TestErrorHandling:
 class TestCORS:
     """Test CORS configuration"""
 
-    @pytest.mark.skip(reason="TestClient doesn't process CORS middleware; test manually with real requests")
-    def test_cors_headers_present(self, client, valid_patient_data):
-        """Test that CORS headers are present in responses"""
-        response = client.post("/api/predict", json=valid_patient_data)
-
-        # Check for CORS headers
-        assert "access-control-allow-origin" in response.headers
-
     def test_cors_configuration_loaded(self):
         """Test that CORS configuration is properly loaded from settings"""
         from api.config import get_settings

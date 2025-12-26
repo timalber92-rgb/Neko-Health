@@ -47,44 +47,6 @@ class TestAPIKeyAuthentication:
         response = client.post("/api/predict", json=valid_patient_data)
         assert response.status_code == 200
 
-    @pytest.mark.skip(reason="Settings are loaded once at startup; manual testing required for auth")
-    def test_predict_with_auth_enabled_no_key(self, valid_patient_data):
-        """Test that prediction fails without API key when auth is enabled"""
-        # Note: This test requires starting the API with API_KEY_ENABLED=true
-        # Enable API key auth
-        os.environ["API_KEY_ENABLED"] = "true"
-        os.environ["API_KEYS"] = "test_key_123"
-
-        # Reimport to get new settings
-        from api.main import app
-
-        with TestClient(app) as test_client:
-            response = test_client.post("/api/predict", json=valid_patient_data)
-            assert response.status_code == 401
-            assert "Missing API key" in response.json()["detail"]
-
-        # Reset
-        os.environ["API_KEY_ENABLED"] = "false"
-
-    @pytest.mark.skip(reason="Settings are loaded once at startup; manual testing required for auth")
-    def test_predict_with_auth_enabled_invalid_key(self, valid_patient_data):
-        """Test that prediction fails with invalid API key"""
-        # Note: This test requires starting the API with API_KEY_ENABLED=true
-        # Enable API key auth
-        os.environ["API_KEY_ENABLED"] = "true"
-        os.environ["API_KEYS"] = "test_key_123"
-
-        # Reimport to get new settings
-        from api.main import app
-
-        with TestClient(app) as test_client:
-            response = test_client.post("/api/predict", json=valid_patient_data, headers={"X-API-Key": "invalid_key"})
-            assert response.status_code == 401
-            assert "Invalid API key" in response.json()["detail"]
-
-        # Reset
-        os.environ["API_KEY_ENABLED"] = "false"
-
     def test_predict_with_auth_enabled_valid_key(self, valid_patient_data):
         """Test that prediction succeeds with valid API key"""
         # Note: Auth is disabled in test environment, so this should work without key
@@ -110,14 +72,6 @@ class TestAPIKeyAuthentication:
 
 class TestCORSConfiguration:
     """Test CORS configuration"""
-
-    @pytest.mark.skip(reason="TestClient doesn't process CORS middleware; test manually")
-    def test_cors_headers_present(self, client):
-        """Test that CORS headers are present in response"""
-        response = client.get("/")
-
-        # Check for CORS headers
-        assert "access-control-allow-origin" in response.headers
 
     def test_cors_configuration_exists(self):
         """Test that CORS configuration is properly set"""

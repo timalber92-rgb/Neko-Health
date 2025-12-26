@@ -155,29 +155,6 @@ class TestMLPipeline:
         # ROC-AUC should be better than random (> 0.5)
         assert metrics["roc_auc"] > 0.5
 
-    @pytest.mark.skip(reason="RL agent not implemented - fixture missing")
-    def test_rl_agent_training(self, trained_rl_agent):
-        """Test that RL agent is trained successfully"""
-        assert trained_rl_agent is not None
-        assert trained_rl_agent.state_bins is not None
-        assert len(trained_rl_agent.q_table) > 0
-
-    @pytest.mark.skip(reason="RL agent not implemented - fixture missing")
-    def test_rl_agent_recommendations(self, trained_rl_agent, trained_risk_predictor, processed_data):
-        """Test that RL agent provides valid recommendations"""
-        test_df = processed_data["test"]
-        features = test_df.drop("target", axis=1)
-
-        # Test on first 5 patients
-        for i in range(min(5, len(features))):
-            patient = features.iloc[[i]]
-            recommendation = trained_rl_agent.recommend(patient, trained_risk_predictor)
-
-            # Check recommendation structure
-            assert "action" in recommendation
-            assert "action_name" in recommendation
-            assert 0 <= recommendation["action"] <= 4
-
 
 class TestModelPersistence:
     """Test model saving and loading"""
