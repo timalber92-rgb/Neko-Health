@@ -36,6 +36,7 @@ def processed_data():
         return {"train": train_df, "val": val_df, "test": test_df}
     except Exception as e:
         pytest.skip(f"Could not load processed data: {str(e)}")
+        return None
 
 
 @pytest.fixture(scope="module")

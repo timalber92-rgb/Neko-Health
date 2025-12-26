@@ -119,8 +119,11 @@ class TestConfigurationManagement:
         settings = Settings()
 
         assert len(settings.cors_origins_list) == 2
-        assert "http://example.com" in settings.cors_origins_list
-        assert "https://app.example.com" in settings.cors_origins_list
+        assert settings.cors_origins_list[0] == "http://example.com" or settings.cors_origins_list[1] == "http://example.com"
+        assert (
+            settings.cors_origins_list[0] == "https://app.example.com"
+            or settings.cors_origins_list[1] == "https://app.example.com"
+        )
 
     def test_api_keys_parsing(self):
         """Test that API keys are parsed correctly"""

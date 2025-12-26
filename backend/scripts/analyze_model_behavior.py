@@ -4,8 +4,6 @@ import sys
 
 sys.path.insert(0, "/workspace/backend")
 
-import pickle
-
 # Load model and scaler
 from pathlib import Path
 

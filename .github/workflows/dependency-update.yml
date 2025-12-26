@@ -1,0 +1,65 @@
+name: Dependency Updates & Health Check
+
+on:
+  # Run weekly on Monday at 10 AM UTC
+  schedule:
+    - cron: '0 10 * * 1'
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  check-updates:
+    name: Check for Dependency Updates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check Python outdated packages
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          echo "## Backend Outdated Packages" >> $GITHUB_STEP_SUMMARY
+          pip list --outdated --format=columns >> $GITHUB_STEP_SUMMARY || echo "All packages up to date!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check npm outdated packages
+        run: |
+          cd frontend
+          npm ci
+          echo "## Frontend Outdated Packages" >> $GITHUB_STEP_SUMMARY
+          npm outdated --long >> $GITHUB_STEP_SUMMARY || echo "All packages up to date!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate Update Report
+        run: |
+          echo "## Dependency Update Report" > update-report.md
+          echo "Generated on: $(date)" >> update-report.md
+          echo "" >> update-report.md
+          echo "### Action Items:" >> update-report.md
+          echo "1. Review Dependabot PRs and merge if tests pass" >> update-report.md
+          echo "2. Check security advisories for critical updates" >> update-report.md
+          echo "3. Test updated dependencies in staging environment" >> update-report.md
+          echo "" >> update-report.md
+          echo "### Next Steps:" >> update-report.md
+          echo "- Dependabot will automatically create PRs for updates" >> update-report.md
+          echo "- Review and merge PRs after CI/CD tests pass" >> update-report.md
+          echo "- For major version updates, review changelog first" >> update-report.md
+
+      - name: Summary
+        run: |
+          echo "## Weekly Dependency Health Check Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dependabot will handle automatic PR creation." >> $GITHUB_STEP_SUMMARY
+          echo "Review the Security tab for any alerts." >> $GITHUB_STEP_SUMMARY

@@ -351,7 +351,7 @@ async def simulate_intervention(request: SimulationRequest):
             modifiable_features=modifiable_features,
         )
 
-        logger.info(f"Simulation: Action {request.action}, " f"Risk {current_risk:.1f}% → {final_risk:.1f}%")
+        logger.info("Simulation: Action %d, Risk %.1f%% → %.1f%%", request.action, current_risk, final_risk)
 
         return result
 

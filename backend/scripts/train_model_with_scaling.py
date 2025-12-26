@@ -18,7 +18,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import logging
 
-import joblib
 from sklearn.preprocessing import StandardScaler
 
 from data.load import load_processed_data
