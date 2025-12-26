@@ -18,4 +18,4 @@ pre-commit==4.5.1  # Git hooks framework
 
 # Development tools
 ipython==8.20.0  # Enhanced Python shell
-jupyter==1.0.0   # Notebooks for exploration
+jupyter==1.1.1   # Notebooks for exploration
