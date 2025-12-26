@@ -10,27 +10,21 @@ Complete documentation for the HealthGuard cardiovascular disease risk predictio
 - **[Contributing Guidelines](../CONTRIBUTING.md)** - Development setup and workflow
 
 ### 🏥 Clinical & Medical
-- **[INTERVENTIONS.md](INTERVENTIONS.md)** - ⭐ **NEW** Complete intervention system guide
+- **[INTERVENTIONS.md](INTERVENTIONS.md)** - Complete intervention system guide
   - All 5 intervention levels explained
   - Risk stratification logic
   - Expected outcomes and evidence base
   - Clinical validation details
 
 ### 🔧 Technical Documentation
-- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Detailed architecture (17KB)
-- **[REFACTORING_ANALYSIS.md](REFACTORING_ANALYSIS.md)** - Code quality analysis (9KB)
+- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Detailed architecture
+- **[REFACTORING_ANALYSIS.md](REFACTORING_ANALYSIS.md)** - Code quality analysis
 - **[CHANGELOG.md](CHANGELOG.md)** - Recent updates and migrations
 
 ### 🚢 Deployment & Operations
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment (Render/Vercel) (12KB)
-- **[SECURITY_SETUP.md](SECURITY_SETUP.md)** - Security configuration (12KB)
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions (7KB)
-
-### 📊 Risk & Intervention Analysis (Legacy - See INTERVENTIONS.md)
-- **[SUMMARY.md](SUMMARY.md)** - Validation overview (7KB)
-- **[EXPECTED_RISK_REDUCTION_TABLE.md](EXPECTED_RISK_REDUCTION_TABLE.md)** - Reference tables (2KB)
-- **[RISK_REDUCTION_ANALYSIS.md](RISK_REDUCTION_ANALYSIS.md)** - Detailed analysis (12KB)
-- **[INTERVENTION_DEFINITIONS.md](INTERVENTION_DEFINITIONS.md)** - Intervention specs (9KB)
+- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Production deployment (Render/Vercel)
+- **[SECURITY_SETUP.md](SECURITY_SETUP.md)** - Security configuration
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
 
 ---
 
@@ -65,21 +59,16 @@ Complete documentation for the HealthGuard cardiovascular disease risk predictio
 
 ## Recent Updates (December 2025)
 
-### NEW: Consolidated Intervention Documentation
-- Created **[INTERVENTIONS.md](INTERVENTIONS.md)** - single source of truth for interventions
-- Combines content from 4 separate docs into one cohesive guide
-- Includes clinical evidence, expected outcomes, and validation details
+### Documentation Cleanup
+- Consolidated intervention documentation into **[INTERVENTIONS.md](INTERVENTIONS.md)** as single source of truth
+- Removed 6 redundant files (INTERVENTION_DEFINITIONS.md, INTERVENTION_RECOMMENDATIONS_SUMMARY.md, SUMMARY.md, EXPECTED_RISK_REDUCTION_TABLE.md, RISK_REDUCTION_ANALYSIS.md, PHASE1_SECURITY_IMPLEMENTATION.md)
+- Reduced total documentation from ~126KB to ~80KB across 8 core files
+- Streamlined navigation and removed legacy references
 
 ### Model Updates
 - **Logistic Regression** now uses embedded StandardScaler
 - Feature scaling applied automatically during prediction
 - Improved performance: 93.9% ROC-AUC on test set
-- Updated all docs to reflect current model (was Random Forest)
-
-### Documentation Streamlining
-- Main README reduced and updated
-- Module-level READMEs enhanced
-- Created this navigation guide
 
 ---
 
@@ -87,19 +76,16 @@ Complete documentation for the HealthGuard cardiovascular disease risk predictio
 
 | File | Size | Purpose |
 |------|------|---------|
-| INTERVENTIONS.md | ~11KB | ⭐ **NEW** Complete intervention guide |
 | IMPLEMENTATION_PLAN.md | 17KB | Detailed architecture |
 | DEPLOYMENT_GUIDE.md | 12KB | Production deployment |
 | SECURITY_SETUP.md | 12KB | Security setup |
-| RISK_REDUCTION_ANALYSIS.md | 12KB | Detailed risk analysis (legacy) |
+| INTERVENTIONS.md | 11KB | Complete intervention guide |
 | REFACTORING_ANALYSIS.md | 9KB | Code quality analysis |
-| INTERVENTION_DEFINITIONS.md | 9KB | Intervention specs (legacy) |
-| SUMMARY.md | 7KB | Validation summary (legacy) |
 | TROUBLESHOOTING.md | 7KB | Common issues |
 | CHANGELOG.md | 4KB | Recent changes |
-| EXPECTED_RISK_REDUCTION_TABLE.md | 2KB | Reference tables (legacy) |
+| README.md | 5KB | Documentation index |
 
-**Total documentation**: ~120KB across 14 files
+**Total documentation**: ~80KB across 8 core files
 
 ---
 
@@ -109,11 +95,11 @@ When updating docs:
 1. Update [INTERVENTIONS.md](INTERVENTIONS.md) for clinical/intervention changes
 2. Update [Main README](../README.md) for high-level changes
 3. Update [CHANGELOG.md](CHANGELOG.md) with date and description
-4. Update this file if adding new documentation
+4. Update this index if adding new documentation
 
 **Documentation standards**:
 - Use clear headings and table of contents
 - Include code examples where applicable
 - Link between related documents
 - Keep technical accuracy paramount
-- Update file size reference if adding large docs
+- Avoid redundancy - consolidate similar content
