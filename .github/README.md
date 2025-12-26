@@ -58,19 +58,19 @@ Standardized templates for GitHub issues:
 
 ## 🚀 Quick Links
 
-- [View Workflows](https://github.com/TimAlbert92/Neko-Health/actions)
-- [Create Issue](https://github.com/TimAlbert92/Neko-Health/issues/new/choose)
-- [Create Pull Request](https://github.com/TimAlbert92/Neko-Health/compare)
-- [Security Advisories](https://github.com/TimAlbert92/Neko-Health/security)
+- [View Workflows](https://github.com/timalber92-rgb/Neko-Health/actions)
+- [Create Issue](https://github.com/timalber92-rgb/Neko-Health/issues/new/choose)
+- [Create Pull Request](https://github.com/timalber92-rgb/Neko-Health/compare)
+- [Security Advisories](https://github.com/timalber92-rgb/Neko-Health/security)
 
 ## 📊 Status Badges
 
 Current build status:
 
-[![Backend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml)
-[![CI/CD Pipeline](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml)
+[![Backend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml)
+[![CI/CD Pipeline](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml)
 
 ## 🔧 How It Works
 
@@ -115,7 +115,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
 - **CodeQL** scans for vulnerabilities
 - **Private security advisories** available
 
-Report security issues: [Create Security Advisory](https://github.com/TimAlbert92/Neko-Health/security/advisories/new)
+Report security issues: [Create Security Advisory](https://github.com/timalber92-rgb/Neko-Health/security/advisories/new)
 
 ## 📖 More Information
 

@@ -6,7 +6,7 @@ Thank you for your interest in contributing to HealthGuard!
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/TimAlbert92/Neko-Health.git
+   git clone https://github.com/timalber92-rgb/Neko-Health.git
    cd Neko-Health
    ```
 

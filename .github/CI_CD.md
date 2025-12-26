@@ -158,10 +158,10 @@ When you create a PR:
 Add to README:
 
 ```markdown
-[![Backend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml)
-[![CI/CD Pipeline](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml)
+[![Backend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml)
+[![CI/CD Pipeline](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml)
 ```
 
 ---
