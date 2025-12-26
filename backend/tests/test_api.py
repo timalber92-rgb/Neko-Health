@@ -52,7 +52,7 @@ class TestHealthCheck:
 
         # Check models_loaded structure
         assert "risk_predictor" in data["models_loaded"]
-        assert "intervention_agent" in data["models_loaded"]
+        assert "recommendation_engine" in data["models_loaded"]
 
     def test_health_check_response_structure(self, client):
         """Test health check response matches schema"""
@@ -158,49 +158,46 @@ class TestRecommendEndpoint:
         assert response.status_code == 200
 
         data = response.json()
-        assert "action" in data
-        assert "action_name" in data
-        assert "description" in data
-        assert "cost" in data
-        assert "intensity" in data
-        assert "current_risk" in data
-        assert "expected_final_risk" in data
-        assert "expected_risk_reduction" in data
+        assert "recommended_action" in data
+        assert "recommendation_name" in data
+        assert "recommendation_description" in data
+        assert "rationale" in data
+        assert "alternative_action" in data
+        assert "alternative_name" in data
+        assert "all_options" in data
+        assert "baseline_risk" in data
+        assert "risk_tier" in data
 
     def test_recommend_response_values(self, client, valid_patient_data):
         """Test that recommendation response values are valid"""
         response = client.post("/api/recommend", json=valid_patient_data)
         data = response.json()
 
-        # Action should be 0-4
-        assert 0 <= data["action"] <= 4
+        # Recommended action should be 1-4
+        assert 1 <= data["recommended_action"] <= 4
 
         # Action name should match action index
         action_names = [
-            "Monitor Only",
             "Lifestyle Intervention",
             "Single Medication",
             "Combination Therapy",
             "Intensive Treatment",
         ]
-        assert data["action_name"] in action_names
+        assert data["recommendation_name"] in action_names
 
         # Risk scores should be valid
-        assert 0 <= data["current_risk"] <= 100
-        assert 0 <= data["expected_final_risk"] <= 100
+        assert 0 <= data["baseline_risk"] <= 100
 
-        # Guideline recommender should provide clinical rationale
-        assert "rationale" in data
+        # Should provide clinical rationale
         assert isinstance(data["rationale"], str)
         assert len(data["rationale"]) > 0
 
-        # Guideline recommender should provide risk_factors
-        assert "risk_factors" in data
-        if data["risk_factors"] is not None:
-            assert isinstance(data["risk_factors"], dict)
-            assert "severe_count" in data["risk_factors"]
-            assert "moderate_count" in data["risk_factors"]
-            assert "details" in data["risk_factors"]
+        # All options should be present
+        assert len(data["all_options"]) >= 1
+        for option in data["all_options"]:
+            assert "action_id" in option
+            assert "name" in option
+            assert "new_risk" in option
 
     def test_recommend_missing_field(self, client, valid_patient_data):
         """Test recommendation with missing required field"""
@@ -221,8 +218,9 @@ class TestRecommendEndpoint:
         data2 = response2.json()
 
         # Should get identical recommendations
-        assert data1["action"] == data2["action"]
-        assert data1["action_name"] == data2["action_name"]
+        assert data1["recommended_action"] == data2["recommended_action"]
+        assert data1["recommendation_name"] == data2["recommendation_name"]
+        assert abs(data1["baseline_risk"] - data2["baseline_risk"]) < 0.1
 
 
 class TestSimulateEndpoint:
@@ -375,13 +373,13 @@ class TestEndToEndWorkflow:
         recommendation = recommend_response.json()
 
         # Step 3: Simulate the recommended intervention
-        simulation_request = {"patient": valid_patient_data, "action": recommendation["action"]}
+        simulation_request = {"patient": valid_patient_data, "action": recommendation["recommended_action"]}
         simulate_response = client.post("/api/simulate", json=simulation_request)
         assert simulate_response.status_code == 200
 
         # Verify data consistency
         # Current risk in simulation should match prediction
-        assert abs(prediction["risk_score"] - recommendation["current_risk"]) < 0.1
+        assert abs(prediction["risk_score"] - recommendation["baseline_risk"]) < 0.1
 
     def test_multiple_patients(self, client):
         """Test analyzing multiple different patients"""
