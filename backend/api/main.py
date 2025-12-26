@@ -186,7 +186,7 @@ async def predict_risk(patient: PatientInput):
         # Make prediction
         prediction = risk_predictor.predict(patient_normalized)
 
-        logger.info(f"Prediction: {prediction['classification']} " f"({prediction['risk_score']:.1f}%)")
+        logger.info("Prediction: %s (%.1f%%)", prediction["classification"], prediction["risk_score"])
 
         return RiskPrediction(**prediction)
 
@@ -258,8 +258,10 @@ async def recommend_intervention(patient: PatientInput):
         )
 
         logger.info(
-            f"Recommendation: {recommendation['recommendation_name']} "
-            f"(Baseline: {baseline_risk:.1f}%, Tier: {recommendation['risk_tier']})"
+            "Recommendation: %s (Baseline: %.1f%%, Tier: %s)",
+            recommendation["recommendation_name"],
+            baseline_risk,
+            recommendation["risk_tier"],
         )
 
         return PersonalizedRecommendation(**recommendation)
