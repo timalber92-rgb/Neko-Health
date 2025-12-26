@@ -136,10 +136,13 @@ def high_risk_patient():
 
 
 def get_risk_prediction(patient_data, predictor, scaler):
-    """Get risk prediction for a patient."""
+    """Get risk prediction for a patient.
+
+    Note: scaler parameter is kept for compatibility but not used.
+    The model now automatically scales features internally.
+    """
     patient_df = pd.DataFrame([patient_data])
-    patient_scaled = pd.DataFrame(scaler.transform(patient_df), columns=patient_df.columns, index=patient_df.index)
-    prediction = predictor.predict(patient_scaled)
+    prediction = predictor.predict(patient_df)
     return prediction["risk_score"]
 
 

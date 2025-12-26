@@ -23,6 +23,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import StandardScaler
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -41,6 +42,7 @@ class RiskPredictor:
 
     Attributes:
         model: LogisticRegression instance
+        scaler: StandardScaler for feature normalization (optional)
         random_state: Random seed for reproducibility
         feature_names: List of feature names from training data
     """
@@ -59,6 +61,7 @@ class RiskPredictor:
             class_weight="balanced",  # Handle class imbalance
             solver="lbfgs",
         )
+        self.scaler: Optional[StandardScaler] = None
         self.feature_names: Optional[list] = None
         logger.info(f"Initialized RiskPredictor with LogisticRegression, " f"random_state={random_state}")
 
@@ -153,8 +156,8 @@ class RiskPredictor:
         along with feature importance for interpretability.
 
         Args:
-            patient_data: DataFrame with patient features (must be normalized
-                         using the same scaler as training data)
+            patient_data: DataFrame with raw patient features. If a scaler was used
+                         during training, it will be automatically applied.
 
         Returns:
             Dictionary containing:
@@ -179,9 +182,17 @@ class RiskPredictor:
             raise ValueError(f"Feature mismatch. Expected {self.feature_names}, " f"got {list(patient_data.columns)}")
 
         try:
+            # Apply scaling if scaler exists
+            if self.scaler is not None:
+                patient_data_scaled = pd.DataFrame(
+                    self.scaler.transform(patient_data), columns=patient_data.columns, index=patient_data.index
+                )
+            else:
+                patient_data_scaled = patient_data
+
             # Get prediction and probability
-            prediction = self.model.predict(patient_data)[0]
-            proba = self.model.predict_proba(patient_data)[0]
+            prediction = self.model.predict(patient_data_scaled)[0]
+            proba = self.model.predict_proba(patient_data_scaled)[0]
             disease_proba = proba[1]  # Probability of class 1 (disease)
 
             # Convert to risk score (0-100%)
@@ -312,7 +323,7 @@ class RiskPredictor:
         """
         Save trained model to disk.
 
-        Saves both the Logistic Regression model and feature names for later use.
+        Saves the Logistic Regression model, feature names, and scaler (if used).
 
         Args:
             path: Path to save the model file (.pkl)
@@ -330,6 +341,7 @@ class RiskPredictor:
                 "model": self.model,
                 "feature_names": self.feature_names,
                 "random_state": self.random_state,
+                "scaler": self.scaler,  # Include scaler (may be None)
             }
 
             joblib.dump(model_data, path)
@@ -343,7 +355,7 @@ class RiskPredictor:
         """
         Load trained model from disk.
 
-        Loads a previously saved model and restores all metadata.
+        Loads a previously saved model and restores all metadata including scaler.
 
         Args:
             path: Path to the saved model file (.pkl)
@@ -362,9 +374,12 @@ class RiskPredictor:
             self.model = model_data["model"]
             self.feature_names = model_data["feature_names"]
             self.random_state = model_data.get("random_state", 42)
+            self.scaler = model_data.get("scaler", None)  # Load scaler if present
 
             logger.info(f"Model loaded from {path}")
             logger.info(f"Features: {len(self.feature_names)}")
+            if self.scaler is not None:
+                logger.info("Scaler loaded - features will be automatically scaled during prediction")
 
         except Exception as e:
             logger.error(f"Failed to load model: {str(e)}")

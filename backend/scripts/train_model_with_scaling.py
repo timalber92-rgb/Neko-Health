@@ -68,6 +68,8 @@ def main():
     # Initialize predictor
     logger.info("\n[3/6] Initializing Logistic Regression predictor...")
     predictor = RiskPredictor(random_state=42)
+    # Attach scaler to predictor so it's saved with the model
+    predictor.scaler = scaler
 
     # Train model
     logger.info("\n[4/6] Training model with cross-validation...")
@@ -81,18 +83,14 @@ def main():
     logger.info("\n[6/6] Feature Importance Analysis...")
     predictor.get_feature_importance()  # Logs feature importance internally
 
-    # Save model and scaler
+    # Save model (scaler is now included in the model)
     model_dir = Path(__file__).parent.parent / "models"
-    data_dir = Path(__file__).parent.parent / "data" / "processed"
     model_dir.mkdir(exist_ok=True)
-    data_dir.mkdir(exist_ok=True)
 
     model_path = model_dir / "risk_predictor.pkl"
-    scaler_path = data_dir / "scaler.pkl"
 
     predictor.save(model_path)
-    joblib.dump(scaler, scaler_path)
-    logger.info(f"Scaler saved to: {scaler_path}")
+    logger.info("Model saved with embedded scaler")
 
     # Summary
     logger.info("\n" + "=" * 80)
@@ -102,8 +100,7 @@ def main():
     logger.info(f"Test ROC-AUC: {test_metrics['roc_auc']:.4f}")
     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
     logger.info(f"Test F1 Score: {test_metrics['f1']:.4f}")
-    logger.info(f"\nModel saved to: {model_path}")
-    logger.info(f"Scaler saved to: {scaler_path}")
+    logger.info(f"\nModel saved to: {model_path} (with embedded scaler)")
     logger.info("=" * 80)
 
     # Verify age coefficient is positive (increases with age)
