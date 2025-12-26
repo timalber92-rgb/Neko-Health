@@ -51,7 +51,6 @@ jobs:
       run: |
         echo "Checking for required model files..."
         ls -lh backend/models/*.pkl
-        ls -lh backend/data/processed/scaler.pkl
         echo "✅ All model files present"
 
     - name: Install frontend dependencies

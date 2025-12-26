@@ -7,16 +7,16 @@
  * - Intervention simulation
  */
 
-import axios from "axios";
+import axios from 'axios';
 
 // Base URL for API - uses Vite proxy in development
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // API Key from environment (for authenticated requests)
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 // Debug logging
-console.log("🔧 API Configuration:", {
+console.log('🔧 API Configuration:', {
   baseURL: API_BASE_URL,
   hasApiKey: !!API_KEY,
   mode: import.meta.env.MODE,
@@ -27,9 +27,9 @@ console.log("🔧 API Configuration:", {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
     // Include API key if available (for staging/production)
-    ...(API_KEY && { "X-API-Key": API_KEY }),
+    ...(API_KEY && { 'X-API-Key': API_KEY }),
   },
   timeout: 10000, // 10 second timeout
 });
@@ -41,9 +41,9 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error("[API Request Error]", error);
+    console.error('[API Request Error]', error);
     return Promise.reject(error);
-  },
+  }
 );
 
 // Response interceptor for error handling
@@ -56,17 +56,17 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       console.error(
-        `[API Error] ${error.response.status} - ${error.response.data?.detail || error.message}`,
+        `[API Error] ${error.response.status} - ${error.response.data?.detail || error.message}`
       );
     } else if (error.request) {
       // Request made but no response
-      console.error("[API Error] No response from server", error.request);
+      console.error('[API Error] No response from server', error.request);
     } else {
       // Request setup error
-      console.error("[API Error] Request setup failed", error.message);
+      console.error('[API Error] Request setup failed', error.message);
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 /**
@@ -76,10 +76,10 @@ apiClient.interceptors.response.use(
  */
 export const checkHealth = async () => {
   try {
-    const response = await apiClient.get("/");
+    const response = await apiClient.get('/');
     return response.data;
   } catch (error) {
-    throw new Error("Failed to connect to API: " + error.message);
+    throw new Error('Failed to connect to API: ' + error.message);
   }
 };
 
@@ -104,13 +104,10 @@ export const checkHealth = async () => {
  */
 export const predictRisk = async (patientData) => {
   try {
-    const response = await apiClient.post("/api/predict", patientData);
+    const response = await apiClient.post('/api/predict', patientData);
     return response.data;
   } catch (error) {
-    throw new Error(
-      error.response?.data?.detail ||
-        "Failed to predict risk: " + error.message,
-    );
+    throw new Error(error.response?.data?.detail || 'Failed to predict risk: ' + error.message);
   }
 };
 
@@ -122,12 +119,11 @@ export const predictRisk = async (patientData) => {
  */
 export const getRecommendation = async (patientData) => {
   try {
-    const response = await apiClient.post("/api/recommend", patientData);
+    const response = await apiClient.post('/api/recommend', patientData);
     return response.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.detail ||
-        "Failed to get recommendation: " + error.message,
+      error.response?.data?.detail || 'Failed to get recommendation: ' + error.message
     );
   }
 };
@@ -146,15 +142,14 @@ export const getRecommendation = async (patientData) => {
  */
 export const simulateIntervention = async (patientData, action) => {
   try {
-    const response = await apiClient.post("/api/simulate", {
+    const response = await apiClient.post('/api/simulate', {
       patient: patientData,
       action: action,
     });
     return response.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.detail ||
-        "Failed to simulate intervention: " + error.message,
+      error.response?.data?.detail || 'Failed to simulate intervention: ' + error.message
     );
   }
 };
@@ -177,7 +172,7 @@ export const getFullAnalysis = async (patientData) => {
       recommendation: recommendation,
     };
   } catch (error) {
-    throw new Error("Failed to get full analysis: " + error.message);
+    throw new Error('Failed to get full analysis: ' + error.message);
   }
 };
 

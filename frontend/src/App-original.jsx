@@ -8,11 +8,11 @@
  * - API communication and state management
  */
 
-import { useState, useEffect } from "react";
-import PatientForm from "./components/PatientForm";
-import RiskDisplay from "./components/RiskDisplay";
-import RecommendationPanel from "./components/RecommendationPanel";
-import { getFullAnalysis, checkHealth } from "./api/client";
+import { useState, useEffect } from 'react';
+import PatientForm from './components/PatientForm';
+import RiskDisplay from './components/RiskDisplay';
+import RecommendationPanel from './components/RecommendationPanel';
+import { getFullAnalysis, checkHealth } from './api/client';
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -28,10 +28,10 @@ function App() {
       try {
         const health = await checkHealth();
         setApiHealth(health);
-        console.log("API Health:", health);
+        console.log('API Health:', health);
       } catch (err) {
-        console.error("API health check failed:", err);
-        setApiHealth({ status: "unavailable", message: err.message });
+        console.error('API health check failed:', err);
+        setApiHealth({ status: 'unavailable', message: err.message });
       }
     };
 
@@ -54,13 +54,11 @@ function App() {
 
       // Scroll to results
       setTimeout(() => {
-        document
-          .getElementById("results")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } catch (err) {
       setError(err.message);
-      console.error("Analysis failed:", err);
+      console.error('Analysis failed:', err);
     } finally {
       setLoading(false);
     }
@@ -87,19 +85,19 @@ function App() {
               <div className="flex items-center bg-white bg-opacity-20 px-4 py-2 rounded-lg backdrop-blur-sm">
                 <div
                   className={`w-2.5 h-2.5 rounded-full mr-2 ${
-                    apiHealth.status === "healthy"
-                      ? "bg-green-400 animate-pulse"
-                      : apiHealth.status === "degraded"
-                        ? "bg-yellow-400"
-                        : "bg-red-400"
+                    apiHealth.status === 'healthy'
+                      ? 'bg-green-400 animate-pulse'
+                      : apiHealth.status === 'degraded'
+                        ? 'bg-yellow-400'
+                        : 'bg-red-400'
                   }`}
                 />
                 <span className="text-sm text-white font-medium">
-                  {apiHealth.status === "healthy"
-                    ? "System Online"
-                    : apiHealth.status === "degraded"
-                      ? "Limited Service"
-                      : "Offline"}
+                  {apiHealth.status === 'healthy'
+                    ? 'System Online'
+                    : apiHealth.status === 'degraded'
+                      ? 'Limited Service'
+                      : 'Offline'}
                 </span>
               </div>
             )}
@@ -110,20 +108,15 @@ function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* API Unavailable Warning */}
-        {apiHealth?.status === "unavailable" && (
+        {apiHealth?.status === 'unavailable' && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <h3 className="text-red-800 font-semibold mb-1">
-              Backend API Unavailable
-            </h3>
+            <h3 className="text-red-800 font-semibold mb-1">Backend API Unavailable</h3>
             <p className="text-red-700 text-sm">
-              Cannot connect to the backend server. Please ensure the FastAPI
-              server is running at{" "}
-              <code className="bg-red-100 px-1 rounded">
-                http://localhost:8000
-              </code>
+              Cannot connect to the backend server. Please ensure the FastAPI server is running at{' '}
+              <code className="bg-red-100 px-1 rounded">http://localhost:8000</code>
             </p>
             <p className="text-red-600 text-xs mt-2">
-              Start the backend:{" "}
+              Start the backend:{' '}
               <code className="bg-red-100 px-1 rounded">
                 cd backend && uvicorn api.main:app --reload
               </code>
@@ -143,11 +136,10 @@ function App() {
               Coronary Artery Disease Risk Prediction
             </h2>
             <p className="text-gray-600 max-w-3xl mx-auto leading-relaxed mb-4">
-              Enter patient clinical measurements to receive an AI-powered risk
-              assessment and evidence-based intervention recommendations. This
-              system predicts <strong>Coronary Artery Disease (CAD)</strong> —
-              the narrowing of arteries that supply blood to your heart — and
-              recommends personalized treatment strategies.
+              Enter patient clinical measurements to receive an AI-powered risk assessment and
+              evidence-based intervention recommendations. This system predicts{' '}
+              <strong>Coronary Artery Disease (CAD)</strong> — the narrowing of arteries that supply
+              blood to your heart — and recommends personalized treatment strategies.
             </p>
 
             {/* Demo Information Box */}
@@ -158,31 +150,26 @@ function App() {
               </h3>
               <div className="space-y-2 text-sm text-gray-700">
                 <p>
-                  <strong>What it predicts:</strong> Probability of ≥50%
-                  narrowing in coronary arteries (clinical threshold for
-                  significant CAD), validated by angiography
+                  <strong>What it predicts:</strong> Probability of ≥50% narrowing in coronary
+                  arteries (clinical threshold for significant CAD), validated by angiography
                 </p>
                 <p>
-                  <strong>How it works:</strong> Random Forest classifier
-                  analyzes 13 cardiovascular risk factors, then applies ACC/AHA
-                  clinical guidelines to recommend interventions (lifestyle
-                  changes, medications, or intensive treatment)
+                  <strong>How it works:</strong> Random Forest classifier analyzes 13 cardiovascular
+                  risk factors, then applies ACC/AHA clinical guidelines to recommend interventions
+                  (lifestyle changes, medications, or intensive treatment)
                 </p>
                 <p>
-                  <strong>Dataset:</strong> UCI Heart Disease Dataset — 303
-                  patients from Cleveland Clinic with angiography-confirmed
-                  diagnoses
+                  <strong>Dataset:</strong> UCI Heart Disease Dataset — 303 patients from Cleveland
+                  Clinic with angiography-confirmed diagnoses
                 </p>
                 <p>
-                  <strong>Performance:</strong> 89% accuracy, 94.5% ROC-AUC on
-                  validation data
+                  <strong>Performance:</strong> 89% accuracy, 94.5% ROC-AUC on validation data
                 </p>
               </div>
               <p className="text-xs text-amber-700 mt-3 italic bg-amber-50 p-2 rounded border border-amber-200">
-                ⚠️ <strong>Demonstration Only:</strong> This is a portfolio
-                project showing how ML can be applied to healthcare. Not
-                validated for clinical use — always consult healthcare
-                professionals for medical decisions.
+                ⚠️ <strong>Demonstration Only:</strong> This is a portfolio project showing how ML
+                can be applied to healthcare. Not validated for clinical use — always consult
+                healthcare professionals for medical decisions.
               </p>
             </div>
 
@@ -226,12 +213,10 @@ function App() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-3">📊</div>
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-700">
-                        Analysis Results
-                      </h3>
+                      <h3 className="text-sm font-semibold text-gray-700">Analysis Results</h3>
                       <p className="text-xs text-gray-600">
-                        Patient: {patientData.age} years old,{" "}
-                        {patientData.sex === 1 ? "Male" : "Female"}
+                        Patient: {patientData.age} years old,{' '}
+                        {patientData.sex === 1 ? 'Male' : 'Female'}
                       </p>
                     </div>
                   </div>
@@ -248,14 +233,8 @@ function App() {
 
             {/* Recommendation Panel */}
             {recommendation && patientData && (
-              <div
-                className="animate-fadeIn"
-                style={{ animationDelay: "200ms" }}
-              >
-                <RecommendationPanel
-                  recommendation={recommendation}
-                  patientData={patientData}
-                />
+              <div className="animate-fadeIn" style={{ animationDelay: '200ms' }}>
+                <RecommendationPanel recommendation={recommendation} patientData={patientData} />
               </div>
             )}
           </div>
@@ -263,35 +242,29 @@ function App() {
 
         {/* Footer Info */}
         <div className="mt-12 p-6 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            About This System
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">About This System</h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-700">
             <div>
               <h4 className="font-semibold mb-1">Risk Prediction Model</h4>
               <p className="text-gray-600">
-                Random Forest classifier trained on the UCI Heart Disease
-                dataset with 89% accuracy and 94.5% ROC-AUC. Provides
-                interpretable feature importance for clinical decision-making.
+                Random Forest classifier trained on the UCI Heart Disease dataset with 89% accuracy
+                and 94.5% ROC-AUC. Provides interpretable feature importance for clinical
+                decision-making.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-1">
-                Guideline-Based Recommendations
-              </h4>
+              <h4 className="font-semibold mb-1">Guideline-Based Recommendations</h4>
               <p className="text-gray-600">
-                Evidence-based intervention recommender following ACC/AHA
-                clinical guidelines. Provides personalized treatment strategies
-                based on risk stratification and identified cardiovascular risk
-                factors.
+                Evidence-based intervention recommender following ACC/AHA clinical guidelines.
+                Provides personalized treatment strategies based on risk stratification and
+                identified cardiovascular risk factors.
               </p>
             </div>
           </div>
           <div className="mt-4 pt-4 border-t border-gray-300">
             <p className="text-xs text-gray-500 text-center">
-              This is a portfolio project demonstrating the application of
-              predictive maintenance ML principles to preventive healthcare. Not
-              for clinical use without proper validation.
+              This is a portfolio project demonstrating the application of predictive maintenance ML
+              principles to preventive healthcare. Not for clinical use without proper validation.
             </p>
           </div>
         </div>
