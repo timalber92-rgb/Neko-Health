@@ -4,15 +4,23 @@
 >
 > Applying 6 years of industrial ML experience to cardiovascular disease prevention
 
+## 📊 Status Badges
+
+### Technology Stack
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109-green.svg)](https://fastapi.tiangolo.com/)
 [![React 18](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-[![Backend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/frontend-tests.yml)
-[![CI/CD Pipeline](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/TimAlbert92/Neko-Health/actions/workflows/codeql.yml)
+### Build & Test Status
+[![Backend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/frontend-tests.yml)
+[![CI/CD Pipeline](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/ci.yml)
+
+### Security & Quality
+[![CodeQL](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/codeql.yml)
+[![Security Audit](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/security-audit.yml)
+[![Dependency Updates](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml/badge.svg)](https://github.com/timalber92-rgb/Neko-Health/actions/workflows/dependency-update.yml)
 
 ## Overview
 
@@ -335,7 +343,31 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) to use the application.
 
-See [QUICKSTART.md](QUICKSTART.md) for detailed setup or [docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md) for production deployment.
+See [QUICKSTART.md](QUICKSTART.md) for detailed setup or [DEPLOYMENT_QUICKSTART.md](DEPLOYMENT_QUICKSTART.md) for production deployment.
+
+---
+
+## Security
+
+This project follows security best practices:
+
+- **API Key Authentication**: All production endpoints require valid API keys
+- **CORS Protection**: Configured for specific frontend domains only
+- **Rate Limiting**: Prevents abuse with configurable request limits
+- **Secret Management**: Environment variables for all sensitive data
+- **Dependency Scanning**: Automated security updates via Dependabot
+- **Secret Scanning**: GitHub alerts for accidentally committed secrets
+
+For deployment and security configuration:
+- [DEPLOYMENT_QUICKSTART.md](DEPLOYMENT_QUICKSTART.md) - Quick production deployment guide (30 minutes)
+- [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) - Comprehensive security documentation
+
+Security features:
+- GitHub Dependabot enabled for automatic dependency updates
+- GitHub Secret Scanning enabled
+- CodeQL analysis via GitHub Actions
+- API key rotation procedures documented
+- OWASP Top 10 coverage
 
 ---
 
@@ -630,9 +662,13 @@ Additional documentation is available in the [docs/](docs/) directory:
 
 ### General Documentation
 - **[CHANGELOG.md](docs/CHANGELOG.md)**: Recent updates and migration history
-- **[DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)**: Production deployment instructions
-- **[SECURITY_SETUP.md](docs/SECURITY_SETUP.md)**: Security configuration and best practices
 - **[QUICKSTART.md](QUICKSTART.md)**: Quick start guide for local development
+- **[DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)**: Production deployment instructions
+
+### Security & Deployment
+- **[DEPLOYMENT_QUICKSTART.md](DEPLOYMENT_QUICKSTART.md)**: 30-minute production deployment guide
+- **[SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md)**: Comprehensive security documentation
+- **[SECURITY_SETUP.md](docs/SECURITY_SETUP.md)**: Security configuration and best practices
 
 ### Risk Reduction Analysis
 - **[SUMMARY.md](docs/SUMMARY.md)**: Overview of intervention system validation and expected risk reduction values
