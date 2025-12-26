@@ -19,11 +19,15 @@
 **HealthGuard** is a full-stack machine learning application that demonstrates how predictive maintenance principles can be applied to preventive healthcare. Just as industrial ML predicts equipment failures 30 days in advance, HealthGuard predicts cardiovascular disease risk years ahead and recommends optimal intervention strategies.
 
 This project was developed as a portfolio piece for a Senior Data Scientist application at **Neko Health**, showcasing:
-- **Predictive ML**: Random Forest classifier for cardiovascular disease risk prediction (89% accuracy, 94.5% ROC-AUC)
+- **Predictive ML**: Logistic Regression classifier with automatic feature scaling (82.6% accuracy, 93.9% ROC-AUC)
 - **Clinical Decision Support**: Guideline-based intervention recommendations following ACC/AHA standards
 - **Full-Stack Implementation**: FastAPI backend + React dashboard with interactive visualization
 
-> **Recent Update**: Migrated from Q-Learning to guideline-based recommendations for improved clinical validity and explainability. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for details.
+> **Recent Updates**:
+> - Integrated StandardScaler into model for automatic feature normalization
+> - Migrated from Q-Learning to guideline-based recommendations for improved clinical validity
+>
+> See [docs/CHANGELOG.md](docs/CHANGELOG.md) for details.
 
 ---
 
@@ -33,7 +37,8 @@ This project was developed as a portfolio piece for a Senior Data Scientist appl
 - [Architecture](#architecture)
 - [Features](#features)
 - [Technical Approach](#technical-approach)
-  - [Why Random Forest?](#why-random-forest)
+  - [Why Logistic Regression?](#why-logistic-regression)
+  - [Feature Scaling](#feature-scaling)
   - [Why Guideline-Based Recommendations?](#why-guideline-based-recommendations)
   - [Model Performance](#model-performance)
 - [Installation](#installation)
@@ -82,28 +87,28 @@ This mirrors the **predictive maintenance workflow** in industrial settings:
 ┌──────────────────┐          ┌──────────────────┐          ┌──────────────────┐
 │                  │          │                  │          │                  │
 │  React Frontend  │  ◄───►   │  FastAPI Backend │  ◄───►   │   ML Models      │
-│   (Port 3000)    │   REST   │   (Port 8000)    │          │   (.pkl files)   │
+│   (Port 5173)    │   REST   │   (Port 8000)    │          │   (.pkl files)   │
 │                  │   API    │                  │          │                  │
 └──────────────────┘          └──────────────────┘          └──────────────────┘
         │                              │                              │
         │                              │                              │
     ┌───▼────┐                  ┌──────▼──────┐              ┌────────▼────────┐
     │ Patient│                  │  Pydantic   │              │  Risk Predictor │
-    │  Form  │                  │  Validation │              │ RandomForest    │
-    │        │                  │             │              │  (100 trees)    │
+    │  Form  │                  │  Validation │              │  LogisticReg    │
+    │        │                  │             │              │ + StandardScaler│
     │13 Input│                  │  4 Endpoints│              │                 │
-    │ Fields │                  │             │              │  89% Accuracy   │
-    └───┬────┘                  └──────┬──────┘              │  94.5% ROC-AUC  │
+    │ Fields │                  │             │              │  82.6% Accuracy │
+    └───┬────┘                  └──────┬──────┘              │  93.9% ROC-AUC  │
         │                              │                     │                 │
     ┌───▼────┐                  ┌──────▼──────┐              └─────────────────┘
     │  Risk  │                  │   /predict  │
     │Display │                  │  /recommend │              ┌─────────────────┐
-    │        │                  │  /simulate  │              │ RL Agent        │
-    │ Gauge  │                  │   /health   │              │ Q-Learning      │
+    │        │                  │  /simulate  │              │ Guideline-Based │
+    │ Gauge  │                  │   /health   │              │ Recommender     │
     │+ Chart │                  │             │              │                 │
-    └───┬────┘                  └─────────────┘              │ 263 States      │
-        │                                                    │ 5 Actions       │
-    ┌───▼────┐                                               │ 0.719 Reward    │
+    └───┬────┘                  └─────────────┘              │ ACC/AHA Rules   │
+        │                                                    │ Risk-Stratified │
+    ┌───▼────┐                                               │ Deterministic   │
     │ Recom- │                                               │                 │
     │mendaton│                                               └─────────────────┘
     │ Panel  │
@@ -116,9 +121,9 @@ This mirrors the **predictive maintenance workflow** in industrial settings:
 **Data Flow**:
 1. **User Input**: 13 clinical features entered via React form
 2. **API Request**: POST to `/api/predict` and `/api/recommend`
-3. **Normalization**: StandardScaler normalizes features (fitted during training)
-4. **Risk Prediction**: Random Forest predicts disease probability → risk score (0-100%)
-5. **RL Recommendation**: Q-Learning agent recommends optimal intervention strategy
+3. **Automatic Scaling**: Model applies StandardScaler internally (embedded in model file)
+4. **Risk Prediction**: Logistic Regression predicts disease probability → risk score (0-100%)
+5. **Guideline Recommendation**: ACC/AHA rule-based system recommends optimal intervention
 6. **Simulation**: User can simulate different interventions to see expected outcomes
 7. **Visualization**: Results displayed with risk gauge, feature importance, and comparison charts
 
@@ -130,7 +135,8 @@ This mirrors the **predictive maintenance workflow** in industrial settings:
 - **Binary classification**: Disease vs. No Disease
 - **Risk score**: 0-100% probability with risk categorization (Low/Medium/High)
 - **Feature importance**: Identifies which biomarkers contribute most to risk
-- **Model**: Random Forest with 100 trees, trained on 303 patients
+- **Model**: Logistic Regression with embedded StandardScaler, trained on 303 patients
+- **Automatic scaling**: Raw patient data is scaled internally before prediction
 
 ### 2. Intervention Recommendation
 - **5 intervention strategies**:
@@ -154,20 +160,31 @@ This mirrors the **predictive maintenance workflow** in industrial settings:
 
 ## Technical Approach
 
-### Why Random Forest?
+### Why Logistic Regression?
 
-**Interpretability** is critical in healthcare applications. While deep learning models might achieve marginally better accuracy, Random Forest provides:
+**Simplicity and interpretability** are critical in healthcare applications. Logistic Regression provides:
 
-1. **Feature Importance Out-of-the-Box**: Clinicians can see which biomarkers drive predictions (e.g., thalassemia test, number of colored vessels, chest pain type)
-2. **Robustness with Small Data**: With only 303 patients, Random Forest is more stable than neural networks
-3. **No Need for Feature Engineering**: Handles non-linear relationships and feature interactions automatically
-4. **Clinical Validation**: Easier to validate with medical professionals when model logic is transparent
+1. **Coefficient Interpretability**: Each feature's contribution to risk is clear and quantifiable
+2. **Probabilistic Outputs**: Natural probability estimates for risk scores (0-100%)
+3. **Fast Inference**: Predictions in <10ms, suitable for real-time applications
+4. **Clinical Validation**: Linear models are well-understood in medical research
+5. **Regulatory Compliance**: Simpler to explain to regulatory bodies (FDA, medical boards)
 
-**Hyperparameters** (tuned to prevent overfitting):
-- `n_estimators=100`: Sufficient trees for stable predictions
-- `max_depth=10`: Limits tree depth to prevent memorization
-- `min_samples_split=5`: Requires 5 samples to split a node
+**Hyperparameters**:
+- `max_iter=2000`: Ensures convergence with scaled features
 - `class_weight='balanced'`: Handles class imbalance in training data
+- `solver='lbfgs'`: Efficient for small to medium datasets
+- `random_state=42`: Reproducible results
+
+### Feature Scaling
+
+**StandardScaler is critical** for Logistic Regression performance:
+
+- **Why needed**: Logistic Regression is sensitive to feature magnitudes (age=60, cholesterol=200, etc.)
+- **Without scaling**: Model performs poorly (ROC-AUC ~0.50, essentially random)
+- **With scaling**: Model achieves 93.9% ROC-AUC and 82.6% accuracy
+- **Implementation**: Scaler is embedded in model file and applied automatically during prediction
+- **User experience**: API and tests pass raw features - scaling happens transparently
 
 ### Why Guideline-Based Recommendations?
 
@@ -200,21 +217,23 @@ This mirrors the **predictive maintenance workflow** in industrial settings:
 
 ### Model Performance
 
-#### Risk Predictor (Random Forest)
+#### Risk Predictor (Logistic Regression + StandardScaler)
 | Metric         | Validation Set | Test Set  |
 |----------------|----------------|-----------|
-| **ROC-AUC**    | 0.861          | **0.945** |
-| **Accuracy**   | 82.6%          | **89.1%** |
-| **Precision**  | 0.853          | 0.896     |
-| **Recall**     | 0.829          | 0.872     |
-| **F1 Score**   | 0.841          | **0.884** |
+| **ROC-AUC**    | 0.871          | **0.939** |
+| **Accuracy**   | 80.4%          | **82.6%** |
+| **Precision**  | 0.833          | 0.760     |
+| **Recall**     | 0.714          | 0.905     |
+| **F1 Score**   | 0.769          | **0.826** |
 
-**Cross-Validation**: 81.5% ± 5.2% (5-fold stratified)
+**Cross-Validation**: 83.8% ± 6.0% (5-fold stratified)
 
-**Top 3 Risk Factors**:
-1. **Thalassemia** (thal): 16.6% importance
-2. **Major Vessels Colored** (ca): 14.3% importance
-3. **Chest Pain Type** (cp): 12.3% importance
+**Top 5 Risk Factors** (absolute coefficient values):
+1. **Major Vessels Colored** (ca): 22.2% importance
+2. **Sex** (male): 12.6% importance
+3. **Thalassemia** (thal): 11.5% importance
+4. **Chest Pain Type** (cp): 11.0% importance
+5. **ST Slope** (slope): 8.2% importance
 
 #### Guideline Recommender
 | Metric                     | Value        |
