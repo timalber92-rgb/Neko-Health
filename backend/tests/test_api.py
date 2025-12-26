@@ -166,7 +166,6 @@ class TestRecommendEndpoint:
         assert "current_risk" in data
         assert "expected_final_risk" in data
         assert "expected_risk_reduction" in data
-        assert "q_values" in data
 
     def test_recommend_response_values(self, client, valid_patient_data):
         """Test that recommendation response values are valid"""
@@ -190,17 +189,10 @@ class TestRecommendEndpoint:
         assert 0 <= data["current_risk"] <= 100
         assert 0 <= data["expected_final_risk"] <= 100
 
-        # Guideline recommender returns None for q_values, RL agent returns dict
-        # Both should be acceptable
-        if data["q_values"] is not None:
-            assert isinstance(data["q_values"], dict)
-            assert len(data["q_values"]) == 5
-
-        # Guideline recommender should provide rationale
+        # Guideline recommender should provide clinical rationale
         assert "rationale" in data
-        if data["rationale"] is not None:
-            assert isinstance(data["rationale"], str)
-            assert len(data["rationale"]) > 0
+        assert isinstance(data["rationale"], str)
+        assert len(data["rationale"]) > 0
 
         # Guideline recommender should provide risk_factors
         assert "risk_factors" in data

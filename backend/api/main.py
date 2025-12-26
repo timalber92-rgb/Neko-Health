@@ -8,7 +8,6 @@ prediction and intervention recommendation using ML models.
 import logging
 from contextlib import asynccontextmanager
 
-import joblib
 import pandas as pd
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,20 +18,24 @@ from api.config import get_settings
 from api.models import (
     HealthCheckResponse,
     HealthStatus,
-    InterventionRecommendation,
     PatientInput,
+    PersonalizedRecommendation,
     RiskPrediction,
     SimulationRequest,
 )
 from api.rate_limit import RateLimitMiddleware
-from ml.guideline_recommender import GuidelineRecommender
-from ml.intervention_utils import apply_intervention_effects, ensure_risk_monotonicity
+from ml.intervention_utils import (
+    apply_intervention_effects,
+    ensure_risk_monotonicity,
+    generate_intervention_explanation,
+    get_modifiable_features,
+)
+from ml.recommendation_engine import InterventionRecommender
 from ml.risk_predictor import RiskPredictor
 
 # Global model instances
 risk_predictor: RiskPredictor = None
-intervention_agent: GuidelineRecommender = None
-scaler = None
+# Scaler removed - Logistic Regression works with raw features
 
 
 @asynccontextmanager
@@ -41,7 +44,7 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for FastAPI.
     Loads ML models on startup and cleans up on shutdown.
     """
-    global risk_predictor, intervention_agent, scaler
+    global risk_predictor
 
     settings = get_settings()
 
@@ -61,22 +64,11 @@ async def lifespan(app: FastAPI):
         else:
             logger.warning(f"Risk predictor not found at {settings.risk_predictor_path}")
 
-        # Load intervention agent (guideline-based recommender)
-        # Note: GuidelineRecommender is rule-based and doesn't require loading saved models,
-        # but we support loading configuration for consistency
-        intervention_agent = GuidelineRecommender()
-        if settings.intervention_agent_path.exists():
-            intervention_agent.load(settings.intervention_agent_path)
-            logger.info(f"Loaded guideline recommender configuration from {settings.intervention_agent_path}")
-        else:
-            logger.info("Using guideline recommender with default configuration (no training required)")
+        # Intervention recommendations now use InterventionRecommender (no model loading required)
+        logger.info("Using InterventionRecommender for personalized recommendations")
 
-        # Load scaler
-        if settings.scaler_path.exists():
-            scaler = joblib.load(settings.scaler_path)
-            logger.info(f"Loaded StandardScaler from {settings.scaler_path}")
-        else:
-            logger.warning(f"Scaler not found at {settings.scaler_path}")
+        # Scaler no longer needed - Logistic Regression works with raw features
+        logger.info("Using raw features (no scaling needed for Logistic Regression)")
 
         # Log security configuration
         if settings.api_key_enabled:
@@ -130,30 +122,20 @@ app.add_middleware(
 logger = logging.getLogger(__name__)
 
 
-def normalize_patient_data(patient: PatientInput) -> pd.DataFrame:
+def patient_to_dataframe(patient: PatientInput) -> pd.DataFrame:
     """
-    Convert patient input to normalized DataFrame for model inference.
+    Convert patient input to DataFrame for model inference.
 
     Args:
         patient: PatientInput model with patient data
 
     Returns:
-        Normalized DataFrame ready for model prediction
-
-    Raises:
-        HTTPException: If scaler is not loaded
+        DataFrame with raw features ready for prediction (no scaling needed)
     """
-    if scaler is None:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Data scaler not loaded")
-
-    # Convert to DataFrame
+    # Convert to DataFrame with raw values - Random Forest doesn't need scaling
     patient_dict = patient.model_dump()
     patient_df = pd.DataFrame([patient_dict])
-
-    # Normalize using the same scaler from training
-    patient_normalized = pd.DataFrame(scaler.transform(patient_df), columns=patient_df.columns)
-
-    return patient_normalized
+    return patient_df
 
 
 @app.get("/", response_model=HealthCheckResponse)
@@ -164,7 +146,10 @@ async def health_check():
     Returns:
         HealthCheckResponse with API status and loaded models
     """
-    models_status = {"risk_predictor": risk_predictor is not None, "intervention_agent": intervention_agent is not None}
+    models_status = {
+        "risk_predictor": risk_predictor is not None,
+        "recommendation_engine": True,  # InterventionRecommender is stateless, always available
+    }
 
     return HealthCheckResponse(
         status="healthy" if all(models_status.values()) else "degraded",
@@ -196,7 +181,7 @@ async def predict_risk(patient: PatientInput):
 
     try:
         # Normalize patient data
-        patient_normalized = normalize_patient_data(patient)
+        patient_normalized = patient_to_dataframe(patient)
 
         # Make prediction
         prediction = risk_predictor.predict(patient_normalized)
@@ -210,45 +195,74 @@ async def predict_risk(patient: PatientInput):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Prediction failed: {str(e)}")
 
 
-@app.post("/api/recommend", response_model=InterventionRecommendation, dependencies=[Depends(verify_api_key)])
+@app.post("/api/recommend", response_model=PersonalizedRecommendation, dependencies=[Depends(verify_api_key)])
 async def recommend_intervention(patient: PatientInput):
     """
-    Get guideline-based intervention recommendation for a patient.
+    Get personalized intervention recommendation for a patient.
 
-    This endpoint uses a clinical guideline-based recommender to recommend
-    the optimal intervention strategy based on risk stratification and
-    evidence-based medical guidelines. Provides explainable recommendations
-    with clinical rationale.
+    This endpoint provides intelligent, risk-stratified recommendations based on:
+    - Patient's baseline cardiovascular risk level
+    - Expected outcomes for each intervention option
+    - Cost-benefit analysis
+    - Clinical guidelines
+
+    The recommendation engine analyzes all intervention options and provides:
+    - Primary recommendation optimized for the patient's risk tier
+    - Alternative recommendation for consideration
+    - Complete comparison of all intervention options with expected outcomes
 
     Args:
         patient: Patient clinical data (13 features)
 
     Returns:
-        InterventionRecommendation with action, explanation, and expected outcomes
+        PersonalizedRecommendation with primary recommendation, alternative,
+        and detailed comparison of all intervention options
 
     Raises:
-        HTTPException: If models are not loaded or recommendation fails
+        HTTPException: If model is not loaded or recommendation fails
     """
-    if risk_predictor is None or intervention_agent is None:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Models not loaded")
+    if risk_predictor is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Risk predictor model not loaded")
 
     try:
-        # Normalize patient data
-        patient_normalized = normalize_patient_data(patient)
+        # Convert patient data to DataFrame
+        patient_df = patient_to_dataframe(patient)
 
-        # Get denormalized data for accurate risk factor thresholding
-        patient_dict = patient.model_dump()
-        patient_raw = pd.DataFrame([patient_dict])
+        # Get baseline risk
+        baseline_prediction = risk_predictor.predict(patient_df)
+        baseline_risk = baseline_prediction["risk_score"]
 
-        # Get guideline-based recommendation (pass both normalized and raw data)
-        recommendation = intervention_agent.recommend(patient_normalized, risk_predictor, denormalized_data=patient_raw)
+        # Calculate outcomes for all intervention options
+        intervention_results = {}
+        for action_id in [1, 2, 3, 4]:
+            # Apply intervention effects
+            modified_df = apply_intervention_effects(patient_df.copy(), action_id)
 
-        logger.info(
-            f"Recommendation: {recommendation['action_name']} "
-            f"(risk reduction: {recommendation['expected_risk_reduction']:.1f}%)"
+            # Get new risk
+            new_prediction = risk_predictor.predict(modified_df)
+            new_risk = new_prediction["risk_score"]
+
+            # Calculate reductions
+            risk_reduction = baseline_risk - new_risk
+            pct_reduction = (risk_reduction / baseline_risk * 100) if baseline_risk > 0 else 0
+
+            intervention_results[action_id] = {
+                "new_risk": new_risk,
+                "risk_reduction": risk_reduction,
+                "pct_reduction": pct_reduction,
+            }
+
+        # Get personalized recommendation
+        recommendation = InterventionRecommender.recommend_intervention(
+            baseline_risk=baseline_risk, intervention_results=intervention_results
         )
 
-        return InterventionRecommendation(**recommendation)
+        logger.info(
+            f"Recommendation: {recommendation['recommendation_name']} "
+            f"(Baseline: {baseline_risk:.1f}%, Tier: {recommendation['risk_tier']})"
+        )
+
+        return PersonalizedRecommendation(**recommendation)
 
     except Exception as e:
         logger.error(f"Recommendation failed: {str(e)}")
@@ -273,30 +287,23 @@ async def simulate_intervention(request: SimulationRequest):
     Raises:
         HTTPException: If models are not loaded or simulation fails
     """
-    if risk_predictor is None or intervention_agent is None:
+    if risk_predictor is None:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Models not loaded")
 
     try:
-        # Convert patient data to DataFrame (raw values)
-        patient_dict = request.patient.model_dump()
-        patient_df = pd.DataFrame([patient_dict])
-
-        # Normalize for model prediction
-        patient_normalized = normalize_patient_data(request.patient)
+        # Convert patient data to DataFrame (raw values - no scaling needed)
+        patient_df = patient_to_dataframe(request.patient)
 
         # Get current risk
-        current_prediction = risk_predictor.predict(patient_normalized)
+        current_prediction = risk_predictor.predict(patient_df)
         current_risk = current_prediction["risk_score"]
 
-        # Apply intervention effects to RAW values (not normalized)
+        # Apply intervention effects to raw values
         # Using smart intervention logic with bounds checking
-        modified_raw = apply_intervention_effects(patient_df, request.action)
+        modified_df = apply_intervention_effects(patient_df.copy(), request.action)
 
-        # Normalize modified data for prediction
-        modified_normalized = pd.DataFrame(scaler.transform(modified_raw), columns=modified_raw.columns)
-
-        # Get new risk from modified data
-        new_prediction = risk_predictor.predict(modified_normalized)
+        # Get new risk from modified data (no scaling needed)
+        new_prediction = risk_predictor.predict(modified_df)
         new_risk = new_prediction["risk_score"]
 
         # Extract key metrics for comparison (RAW VALUES)
@@ -308,10 +315,10 @@ async def simulate_intervention(request: SimulationRequest):
         }
 
         optimized_metrics = {
-            "trestbps": float(modified_raw["trestbps"].iloc[0]),
-            "chol": float(modified_raw["chol"].iloc[0]),
-            "thalach": float(modified_raw["thalach"].iloc[0]),
-            "oldpeak": float(modified_raw["oldpeak"].iloc[0]),
+            "trestbps": float(modified_df["trestbps"].iloc[0]),
+            "chol": float(modified_df["chol"].iloc[0]),
+            "thalach": float(modified_df["thalach"].iloc[0]),
+            "oldpeak": float(modified_df["oldpeak"].iloc[0]),
         }
 
         # Apply risk monotonicity safeguard to prevent paradoxical risk increases
@@ -319,15 +326,32 @@ async def simulate_intervention(request: SimulationRequest):
             current_risk, new_risk, current_metrics, optimized_metrics, request.action
         )
 
+        # Calculate risk reduction
+        risk_reduction = current_risk - final_risk
+
+        # Get feature importance from the current prediction
+        feature_importance = current_prediction.get("feature_importance", {})
+
+        # Generate explanation for why risk changed (or didn't)
+        explanation = generate_intervention_explanation(
+            current_metrics, final_metrics, risk_reduction, feature_importance, request.action
+        )
+
+        # Get list of modifiable features
+        modifiable_features = get_modifiable_features()
+
         result = HealthStatus(
             current_metrics=current_metrics,
             optimized_metrics=final_metrics,
             current_risk=current_risk,
             expected_risk=final_risk,
-            risk_reduction=current_risk - final_risk,
+            risk_reduction=risk_reduction,
+            explanation=explanation,
+            feature_importance=feature_importance,
+            modifiable_features=modifiable_features,
         )
 
-        logger.info(f"Simulation: Action {request.action}, " f"Risk {current_risk:.1f}% → {new_risk:.1f}%")
+        logger.info(f"Simulation: Action {request.action}, " f"Risk {current_risk:.1f}% → {final_risk:.1f}%")
 
         return result
 

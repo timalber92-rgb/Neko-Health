@@ -249,6 +249,7 @@ class GuidelineRecommender:
         base_action: int,
         risk_factors: Dict[str, int],
         escalation_reasons: List[str],
+        patient_data: Optional[pd.DataFrame] = None,
     ) -> str:
         """
         Generate human-readable clinical rationale for the recommendation.
@@ -259,6 +260,7 @@ class GuidelineRecommender:
             base_action: Initial recommendation before escalation
             risk_factors: Risk factor counts and details
             escalation_reasons: Reasons for any escalation
+            patient_data: Optional patient data for enhanced reasoning
 
         Returns:
             Clinical rationale string
@@ -291,6 +293,19 @@ class GuidelineRecommender:
             if risk_factors["details"]:
                 rationale_parts.append(f"Specific factors: {', '.join(risk_factors['details'])}.")
 
+        # Check for structural heart disease indicators (if patient data available)
+        has_structural_disease = False
+        if patient_data is not None:
+            # Check for thalassemia defect or multi-vessel disease
+            if "thal" in patient_data.columns:
+                thal = int(patient_data["thal"].iloc[0])
+                if thal in [6, 7]:  # Fixed or reversible defect
+                    has_structural_disease = True
+            if "ca" in patient_data.columns:
+                ca = int(patient_data["ca"].iloc[0])
+                if ca >= 2:  # Multiple diseased vessels
+                    has_structural_disease = True
+
         # Base recommendation
         action_name = ACTIONS[action]["name"]
         rationale_parts.append(f"Recommended intervention: {action_name}.")
@@ -299,32 +314,50 @@ class GuidelineRecommender:
         if escalation_reasons:
             rationale_parts.append("Escalation applied: " + " ".join(escalation_reasons))
         elif action == base_action:
-            # Standard guideline-based recommendation
+            # Standard guideline-based recommendation with enhanced reasoning
             if action == 0:
-                rationale_parts.append("Continue monitoring with regular checkups.")
+                rationale_parts.append(
+                    "Continue monitoring with regular checkups. "
+                    "No active intervention needed for low-risk patients with optimal metrics."
+                )
             elif action == 1:
-                rationale_parts.append("Lifestyle modifications can effectively reduce risk at this level.")
+                rationale_parts.append(
+                    "Lifestyle modifications (diet, exercise, stress management) can effectively reduce modifiable risk factors. "
+                    "Recommended as first-line intervention for low-to-moderate risk."
+                )
             elif action == 2:
-                rationale_parts.append("Single medication therapy is guideline-recommended for this risk level.")
+                rationale_parts.append(
+                    "Single medication therapy (e.g., statin or ACE inhibitor) is guideline-recommended for this risk level. "
+                    "Targets elevated blood pressure and cholesterol to reduce cardiovascular events."
+                )
             elif action == 3:
-                rationale_parts.append("Combination therapy (medication + lifestyle) is guideline-recommended for high risk.")
+                rationale_parts.append(
+                    "Combination therapy (medication + supervised lifestyle program) is guideline-recommended for high risk. "
+                    "Provides comprehensive risk reduction by addressing multiple modifiable factors simultaneously."
+                )
             elif action == 4:
                 rationale_parts.append(
-                    "Intensive treatment with multiple medications is warranted for very high risk patients."
+                    "Intensive treatment with multiple medications and lifestyle management is warranted for very high risk. "
+                    "Maximal intervention to reduce modifiable risk factors and prevent cardiovascular events."
                 )
+
+        # Add note about structural disease limitations
+        if has_structural_disease and action >= 2:
+            rationale_parts.append(
+                "Note: This patient has structural heart disease (vessel disease or thalassemia defects) "
+                "which cannot be fully reversed by medication or lifestyle changes. "
+                "The recommended treatment focuses on managing modifiable risk factors to slow disease progression."
+            )
 
         return " ".join(rationale_parts)
 
-    def recommend(
-        self, patient_data: pd.DataFrame, risk_predictor, denormalized_data: Optional[pd.DataFrame] = None
-    ) -> Dict[str, Any]:
+    def recommend(self, patient_data: pd.DataFrame, risk_predictor) -> Dict[str, Any]:
         """
         Recommend optimal intervention for a patient using clinical guidelines.
 
         Args:
-            patient_data: Patient features (must be normalized)
+            patient_data: Patient features (raw values - no normalization needed)
             risk_predictor: Trained RiskPredictor to estimate risk scores
-            denormalized_data: Optional raw patient data for accurate threshold checking
 
         Returns:
             Dictionary containing:
@@ -343,8 +376,8 @@ class GuidelineRecommender:
         current_prediction = risk_predictor.predict(patient_data)
         current_risk = current_prediction["risk_score"]
 
-        # Count risk factors (use denormalized data if available)
-        risk_factors = self._count_risk_factors(patient_data, denormalized_data)
+        # Count risk factors using raw patient data
+        risk_factors = self._count_risk_factors(patient_data, patient_data)
 
         # Get base recommendation from risk score
         base_action = self._get_base_recommendation(current_risk)
@@ -356,25 +389,18 @@ class GuidelineRecommender:
         action_info = ACTIONS[action]
 
         # Generate clinical rationale
-        rationale = self._generate_rationale(current_risk, action, base_action, risk_factors, escalation_reasons)
+        rationale = self._generate_rationale(
+            current_risk, action, base_action, risk_factors, escalation_reasons, patient_data=patient_data
+        )
 
         # Estimate expected outcome (using intervention simulation)
-        from ml.intervention_utils import apply_intervention_effects, apply_simple_intervention_effects
+        from ml.intervention_utils import apply_intervention_effects
 
-        # For simulation, we need to use denormalized data if available
-        # If not available, use normalized data (intervention_utils handles both)
-        data_for_simulation = denormalized_data if denormalized_data is not None else patient_data
+        # Apply intervention effects to raw data
+        modified_data = apply_intervention_effects(patient_data.copy(), action)
 
-        modified_data = apply_intervention_effects(data_for_simulation, action)
-
-        # If we used denormalized data, we need to normalize it back for prediction
-        if denormalized_data is not None:
-            # We need the scaler for this, but we don't have access to it here
-            # So we'll use the normalized data with simple intervention effects
-            modified_normalized = apply_simple_intervention_effects(patient_data, action)
-            next_prediction = risk_predictor.predict(modified_normalized)
-        else:
-            next_prediction = risk_predictor.predict(modified_data)
+        # Get new risk prediction (no scaling needed)
+        next_prediction = risk_predictor.predict(modified_data)
 
         expected_risk_raw = next_prediction["risk_score"]
 
@@ -494,7 +520,7 @@ def main():
 
     # Load data
     logger.info("\n[1/4] Loading processed data and risk predictor...")
-    train_df, val_df, test_df, scaler = load_processed_data()
+    train_df, val_df, test_df = load_processed_data()
 
     # Load trained risk predictor
     model_path = Path(__file__).parent.parent / "models" / "risk_predictor.pkl"

@@ -1,7 +1,7 @@
 """
 Risk Prediction Module for HealthGuard
 
-This module implements the RandomForest-based cardiovascular disease risk
+This module implements the Logistic Regression-based cardiovascular disease risk
 predictor. It provides functionality for training, evaluation, and inference
 with comprehensive metrics and feature importance analysis.
 """
@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 
 import joblib
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class RiskPredictor:
     """
-    Random Forest classifier for cardiovascular disease risk prediction.
+    Logistic Regression classifier for cardiovascular disease risk prediction.
 
     This predictor provides:
     - Binary classification (disease/no disease)
@@ -40,36 +40,31 @@ class RiskPredictor:
     - Comprehensive evaluation metrics
 
     Attributes:
-        model: RandomForestClassifier instance
-        n_estimators: Number of trees in the forest
+        model: LogisticRegression instance
         random_state: Random seed for reproducibility
         feature_names: List of feature names from training data
     """
 
-    def __init__(self, n_estimators: int = 100, random_state: int = 42):
+    def __init__(self, random_state: int = 42):
         """
-        Initialize Random Forest classifier.
+        Initialize Logistic Regression classifier.
 
         Args:
-            n_estimators: Number of trees in the random forest (default: 100)
             random_state: Random seed for reproducibility (default: 42)
         """
-        self.n_estimators = n_estimators
         self.random_state = random_state
-        self.model = RandomForestClassifier(
-            n_estimators=n_estimators,
+        self.model = LogisticRegression(
             random_state=random_state,
-            max_depth=10,  # Prevent overfitting on small dataset
-            min_samples_split=5,  # Require at least 5 samples to split
-            min_samples_leaf=2,  # Require at least 2 samples in leaf
+            max_iter=2000,  # Increased to ensure convergence
             class_weight="balanced",  # Handle class imbalance
+            solver="lbfgs",
         )
         self.feature_names: Optional[list] = None
-        logger.info(f"Initialized RiskPredictor with {n_estimators} estimators, " f"random_state={random_state}")
+        logger.info(f"Initialized RiskPredictor with LogisticRegression, " f"random_state={random_state}")
 
     def train(self, X_train: pd.DataFrame, y_train: pd.Series, X_val: pd.DataFrame, y_val: pd.Series) -> Dict[str, float]:
         """
-        Train the Random Forest model with cross-validation.
+        Train the Logistic Regression model with cross-validation.
 
         Performs 5-fold stratified cross-validation on the training set,
         then trains the final model and evaluates on the validation set.
@@ -282,6 +277,7 @@ class RiskPredictor:
 
         Feature importance indicates which patient attributes contribute
         most to the risk prediction. Higher values = more important.
+        For Logistic Regression, uses absolute coefficients normalized to sum to 1.
 
         Returns:
             DataFrame with columns ['feature', 'importance'], sorted by
@@ -290,14 +286,16 @@ class RiskPredictor:
         Raises:
             ValueError: If model hasn't been trained
         """
-        if self.model is None or not hasattr(self.model, "feature_importances_"):
+        if self.model is None or not hasattr(self.model, "coef_"):
             raise ValueError("Model has not been trained yet. Call train() first.")
 
         if self.feature_names is None:
             raise ValueError("Feature names not set. Model may not be trained properly.")
 
-        # Get importance scores from Random Forest
-        importances = self.model.feature_importances_
+        # Get importance scores from Logistic Regression coefficients
+        # Use absolute values and normalize to sum to 1
+        importances = abs(self.model.coef_[0])
+        importances = importances / importances.sum()
 
         # Create DataFrame and sort by importance
         importance_df = pd.DataFrame({"feature": self.feature_names, "importance": importances}).sort_values(
@@ -314,7 +312,7 @@ class RiskPredictor:
         """
         Save trained model to disk.
 
-        Saves both the RandomForest model and feature names for later use.
+        Saves both the Logistic Regression model and feature names for later use.
 
         Args:
             path: Path to save the model file (.pkl)
@@ -331,7 +329,6 @@ class RiskPredictor:
             model_data = {
                 "model": self.model,
                 "feature_names": self.feature_names,
-                "n_estimators": self.n_estimators,
                 "random_state": self.random_state,
             }
 
@@ -364,8 +361,7 @@ class RiskPredictor:
 
             self.model = model_data["model"]
             self.feature_names = model_data["feature_names"]
-            self.n_estimators = model_data["n_estimators"]
-            self.random_state = model_data["random_state"]
+            self.random_state = model_data.get("random_state", 42)
 
             logger.info(f"Model loaded from {path}")
             logger.info(f"Features: {len(self.feature_names)}")
@@ -400,7 +396,7 @@ def main():
 
     # Load data
     logger.info("\n[1/5] Loading processed data...")
-    train_df, val_df, test_df, scaler = load_processed_data()
+    train_df, val_df, test_df = load_processed_data()
 
     # Separate features and targets
     X_train = train_df.drop("target", axis=1)
@@ -413,8 +409,8 @@ def main():
     logger.info(f"Train: {X_train.shape}, Val: {X_val.shape}, Test: {X_test.shape}")
 
     # Initialize predictor
-    logger.info("\n[2/5] Initializing Random Forest predictor...")
-    predictor = RiskPredictor(n_estimators=100, random_state=42)
+    logger.info("\n[2/5] Initializing Logistic Regression predictor...")
+    predictor = RiskPredictor(random_state=42)
 
     # Train model
     logger.info("\n[3/5] Training model with cross-validation...")

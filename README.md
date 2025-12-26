@@ -609,10 +609,17 @@ UCI Heart Disease Dataset:
 
 Additional documentation is available in the [docs/](docs/) directory:
 
+### General Documentation
 - **[CHANGELOG.md](docs/CHANGELOG.md)**: Recent updates and migration history
 - **[DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)**: Production deployment instructions
 - **[SECURITY_SETUP.md](docs/SECURITY_SETUP.md)**: Security configuration and best practices
 - **[QUICKSTART.md](QUICKSTART.md)**: Quick start guide for local development
+
+### Risk Reduction Analysis
+- **[SUMMARY.md](docs/SUMMARY.md)**: Overview of intervention system validation and expected risk reduction values
+- **[INTERVENTION_DEFINITIONS.md](docs/INTERVENTION_DEFINITIONS.md)**: Complete definitions of all 5 intervention levels
+- **[EXPECTED_RISK_REDUCTION_TABLE.md](docs/EXPECTED_RISK_REDUCTION_TABLE.md)**: Reference tables with expected risk reduction values
+- **[RISK_REDUCTION_ANALYSIS.md](docs/RISK_REDUCTION_ANALYSIS.md)**: Detailed clinical analysis and validation
 
 ---
 

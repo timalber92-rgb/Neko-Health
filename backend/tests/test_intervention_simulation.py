@@ -422,7 +422,13 @@ class TestReasonableRiskReductions:
         assert intensive_data["risk_reduction"] >= lifestyle_data["risk_reduction"] - 0.5
 
     def test_single_medication_between_lifestyle_and_combo(self, client, moderate_risk_patient):
-        """Single medication should provide effects between lifestyle and combination therapy"""
+        """
+        Single medication should provide effects between lifestyle and combination therapy.
+
+        NOTE: For moderate-risk patients, this ordering generally holds, but risk reduction
+        depends on which features the model weighs most heavily. If structural factors
+        dominate, risk reduction may be modest across all interventions.
+        """
         lifestyle_response = client.post(
             "/api/simulate",
             json={"patient": moderate_risk_patient, "action": 1},
@@ -440,14 +446,20 @@ class TestReasonableRiskReductions:
         single_med_data = single_med_response.json()
         combo_data = combo_response.json()
 
-        # Calculate BP improvements
+        # Calculate BP improvements (metric changes should be monotonic)
         lifestyle_bp = lifestyle_data["current_metrics"]["trestbps"] - lifestyle_data["optimized_metrics"]["trestbps"]
         single_med_bp = single_med_data["current_metrics"]["trestbps"] - single_med_data["optimized_metrics"]["trestbps"]
         combo_bp = combo_data["current_metrics"]["trestbps"] - combo_data["optimized_metrics"]["trestbps"]
 
-        # Single med should be between lifestyle and combo (with some tolerance)
-        assert single_med_bp >= lifestyle_bp - 1  # Allow small margin
-        assert combo_bp >= single_med_bp - 1  # Allow small margin
+        # BP reductions should be monotonic (more intensive = more reduction)
+        assert single_med_bp >= lifestyle_bp - 1  # Allow small margin for rounding
+        assert combo_bp >= single_med_bp - 1  # Allow small margin for rounding
+
+        # Risk reductions may NOT be monotonic due to feature importance
+        # (structural factors may dominate), so we only check they're non-negative
+        assert lifestyle_data["risk_reduction"] >= 0
+        assert single_med_data["risk_reduction"] >= 0
+        assert combo_data["risk_reduction"] >= 0
 
     def test_interventions_produce_positive_or_zero_risk_reduction(self, client, high_risk_patient):
         """All interventions should reduce or maintain risk, never increase it"""
@@ -837,11 +849,14 @@ class TestComprehensiveTreatmentEffects:
 
     def test_high_risk_patient_single_medication(self, client, high_risk_patient):
         """
-        High-risk patient + Single Medication: Meaningful improvement but may be insufficient.
+        High-risk patient + Single Medication: Meaningful metric improvement but limited risk reduction.
 
-        Rationale: Single medication helps but may not be enough for severe hypertension
-        and hyperlipidemia.
-        Expected: Moderate BP/cholesterol reductions, but may not reach treatment goals.
+        Rationale: For high-risk patients with structural heart disease (thal defect, multi-vessel disease),
+        single medication reduces BP and cholesterol but may have minimal impact on overall risk because
+        the MODEL's primary risk drivers are structural factors (thal, ca, cp) that cannot be modified.
+
+        Expected: Significant BP/cholesterol reductions, but risk reduction may be small (<5%)
+        due to dominance of non-modifiable structural factors in the ML model.
         """
         response = client.post("/api/simulate", json={"patient": high_risk_patient, "action": 2})
         data = response.json()
@@ -852,11 +867,20 @@ class TestComprehensiveTreatmentEffects:
         bp_reduction = current["trestbps"] - optimized["trestbps"]
         chol_reduction = current["chol"] - optimized["chol"]
 
-        # Should see meaningful reductions
+        # Should see meaningful metric reductions
         assert bp_reduction >= 10, f"Single med should give ≥10 mmHg BP reduction, got {bp_reduction}"
         assert chol_reduction >= 20, f"Single med should give ≥20 mg/dL cholesterol reduction, got {chol_reduction}"
 
-        assert data["risk_reduction"] >= 0
+        # Risk reduction may be minimal due to structural disease
+        assert data["risk_reduction"] >= 0, "Risk should not increase"
+
+        # Verify explanation addresses this
+        if "explanation" in data:
+            # If risk reduction is small, explanation should mention structural factors
+            if data["risk_reduction"] < 5:
+                assert (
+                    "structural" in data["explanation"].lower() or "cannot be modified" in data["explanation"].lower()
+                ), "Explanation should address why risk reduction is limited"
 
     def test_high_risk_patient_combination_therapy(self, client, high_risk_patient):
         """

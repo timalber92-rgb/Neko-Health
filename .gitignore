@@ -6,43 +6,88 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 *.egg-info/
 dist/
 build/
 *.pkl
 *.joblib
+*.sage.py
 
 # Testing
 .coverage
 coverage.xml
 htmlcov/
 .pytest_cache/
+.tox/
+.hypothesis/
 
 # Data
 backend/data/raw/*.csv
 backend/data/processed/*.csv
 *.parquet
+*.h5
+*.hdf5
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints
+*.ipynb
 
 # Node
 node_modules/
 .npm
+.pnp
+.pnp.js
 dist/
 build/
+.next/
+out/
 
 # Environment
 .env
 .env.local
+.env.production
+.env.staging
+.env.*.local
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.cache
+
+# Frontend specific
+.turbo
+.vercel

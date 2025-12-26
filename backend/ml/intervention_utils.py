@@ -7,7 +7,7 @@ This module provides smart intervention logic that:
 - Prevents normalization paradoxes for healthy patients
 """
 
-from typing import Dict
+from typing import Dict, List
 
 import pandas as pd
 
@@ -291,3 +291,122 @@ def ensure_risk_monotonicity(
 
     # If intervention successfully reduces risk, use the optimized metrics
     return new_risk, optimized_metrics
+
+
+def generate_intervention_explanation(
+    current_metrics: Dict[str, float],
+    optimized_metrics: Dict[str, float],
+    risk_reduction: float,
+    feature_importance: Dict[str, float],
+    action: int,
+) -> str:
+    """
+    Generate a clinical explanation for why risk changed (or didn't change).
+
+    Args:
+        current_metrics: Original patient metrics
+        optimized_metrics: Modified metrics after intervention
+        risk_reduction: Achieved risk reduction percentage
+        feature_importance: Feature importance from ML model
+        action: Intervention action (0-4)
+
+    Returns:
+        Human-readable explanation string
+    """
+    action_names = [
+        "Monitor Only",
+        "Lifestyle Intervention",
+        "Single Medication",
+        "Combination Therapy",
+        "Intensive Treatment",
+    ]
+
+    # For monitor only
+    if action == 0:
+        return "No intervention applied - patient metrics remain unchanged."
+
+    # Calculate metric changes
+    bp_change = current_metrics.get("trestbps", 0) - optimized_metrics.get("trestbps", 0)
+    chol_change = current_metrics.get("chol", 0) - optimized_metrics.get("chol", 0)
+    thalach_change = optimized_metrics.get("thalach", 0) - current_metrics.get("thalach", 0)
+    oldpeak_change = current_metrics.get("oldpeak", 0) - optimized_metrics.get("oldpeak", 0)
+
+    # Get top risk factors (features with highest importance)
+    sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
+    top_3_features = sorted_features[:3]
+
+    # Feature name mapping for better readability
+    feature_names = {
+        "thal": "thalassemia status",
+        "ca": "number of diseased vessels",
+        "cp": "chest pain type",
+        "oldpeak": "ST depression",
+        "thalach": "maximum heart rate",
+        "trestbps": "blood pressure",
+        "chol": "cholesterol",
+        "age": "age",
+        "sex": "sex",
+        "exang": "exercise-induced angina",
+        "slope": "ST slope",
+        "restecg": "resting ECG",
+        "fbs": "fasting blood sugar",
+    }
+
+    # Build explanation
+    parts = []
+
+    # Part 1: What changed
+    changes = []
+    if abs(bp_change) > 1:
+        changes.append(f"blood pressure {'reduced' if bp_change > 0 else 'increased'} by {abs(bp_change):.1f} mmHg")
+    if abs(chol_change) > 1:
+        changes.append(f"cholesterol {'reduced' if chol_change > 0 else 'increased'} by {abs(chol_change):.1f} mg/dL")
+    if abs(thalach_change) > 1:
+        changes.append(
+            f"maximum heart rate {'improved' if thalach_change > 0 else 'decreased'} by {abs(thalach_change):.1f} bpm"
+        )
+    if abs(oldpeak_change) > 0.1:
+        changes.append(f"ST depression {'reduced' if oldpeak_change > 0 else 'increased'} by {abs(oldpeak_change):.1f}")
+
+    if changes:
+        parts.append(f"{action_names[action]} resulted in: " + ", ".join(changes) + ".")
+    else:
+        parts.append(f"{action_names[action]} applied, but metrics were already optimal and showed minimal change.")
+
+    # Part 2: Risk outcome
+    if risk_reduction > 5:
+        parts.append(f"These changes contributed to a {risk_reduction:.1f}% reduction in cardiovascular disease risk.")
+    elif risk_reduction > 0:
+        parts.append(
+            f"Despite metric improvements, risk reduction was modest ({risk_reduction:.1f}%). "
+            f"This is because the model's primary risk drivers are structural factors."
+        )
+    else:
+        parts.append(
+            "Risk did not decrease despite metric changes. "
+            "This occurs when the intervention doesn't address the dominant risk factors for this patient."
+        )
+
+    # Part 3: Explain top risk drivers
+    top_feature_names = [feature_names.get(f[0], f[0]) for f in top_3_features]
+    modifiable_in_top_3 = any(f[0] in ["trestbps", "chol", "oldpeak", "thalach"] for f in top_3_features)
+
+    if not modifiable_in_top_3:
+        parts.append(
+            f"The primary risk drivers for this patient are {', '.join(top_feature_names[:2])}, and {top_feature_names[2]}, "
+            f"which are structural factors that cannot be modified by lifestyle or medication interventions."
+        )
+    else:
+        parts.append(f"The key risk factors are {', '.join(top_feature_names[:2])}, and {top_feature_names[2]}.")
+
+    return " ".join(parts)
+
+
+def get_modifiable_features() -> List[str]:
+    """
+    Return list of features that can be modified by interventions.
+
+    Returns:
+        List of modifiable feature names
+    """
+    return ["trestbps", "chol", "thalach", "oldpeak", "exang"]

@@ -1,15 +1,14 @@
 /**
  * RecommendationPanel Component
  *
- * Displays RL-based intervention recommendations:
- * - Recommended action with explanation
- * - Expected outcomes and risk reduction
- * - Comparison of current vs optimized health metrics
- * - Interactive simulation of alternative interventions
+ * Displays comprehensive cardiovascular risk assessment and intervention recommendations:
+ * - Risk score visualization with feature importance
+ * - Disease detection and impact explanation
+ * - Recommended action with clinical rationale
+ * - Comparison table of all intervention options
+ * - Expected outcomes and risk reduction for each option
  */
 
-import { useState } from "react";
-import { simulateIntervention } from "../api/client";
 import {
   BarChart,
   Bar,
@@ -17,453 +16,606 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-} from "recharts";
+  Cell,
+} from 'recharts';
+
+// Risk level thresholds and styling
+// These thresholds align with clinical cardiovascular risk stratification
+const RISK_LEVELS = {
+  low: {
+    threshold: 20,
+    label: 'Low Risk',
+    color: 'text-success-600',
+    bgColor: 'bg-success-100',
+    borderColor: 'border-success-500',
+    gaugeColor: '#22c55e',
+  },
+  moderate: {
+    threshold: 50,
+    label: 'Moderate Risk',
+    color: 'text-warning-600',
+    bgColor: 'bg-warning-100',
+    borderColor: 'border-warning-500',
+    gaugeColor: '#f59e0b',
+  },
+  high: {
+    threshold: 100,
+    label: 'High Risk',
+    color: 'text-danger-600',
+    bgColor: 'bg-danger-100',
+    borderColor: 'border-danger-500',
+    gaugeColor: '#ef4444',
+  },
+};
+
+// Feature name mapping for better display
+const FEATURE_LABELS = {
+  age: 'Age',
+  sex: 'Sex',
+  cp: 'Chest Pain Type',
+  trestbps: 'Blood Pressure',
+  chol: 'Cholesterol',
+  fbs: 'Fasting Blood Sugar',
+  restecg: 'Resting ECG',
+  thalach: 'Max Heart Rate',
+  exang: 'Exercise Angina',
+  oldpeak: 'ST Depression',
+  slope: 'ST Slope',
+  ca: 'Major Vessels',
+  thal: 'Thalassemia',
+};
 
 // Action definitions with specific medications
 const ACTIONS = [
   {
     id: 0,
-    name: "Monitor Only",
-    icon: "👁️",
-    description: "Quarterly checkups with no active intervention",
+    name: 'Monitor Only',
+    icon: '👁️',
+    description: 'Quarterly checkups with no active intervention',
     medications: [],
-    details:
-      "Regular cardiovascular check-ups every 3 months. No active medications prescribed.",
+    details: 'Regular cardiovascular check-ups every 3 months. No active medications prescribed.',
   },
   {
     id: 1,
-    name: "Lifestyle Intervention",
-    icon: "🏃",
-    description: "Diet and exercise program with regular monitoring",
+    name: 'Lifestyle Modifications',
+    icon: '🏃',
+    description: 'Diet and exercise program with regular monitoring',
     medications: [],
     details:
-      "Structured exercise program (150 min/week moderate activity), Mediterranean diet, smoking cessation support.",
+      'Structured exercise program (150 min/week moderate activity), Mediterranean diet, smoking cessation support.',
   },
   {
     id: 2,
-    name: "Single Medication",
-    icon: "💊",
-    description: "Single medication targeting cholesterol or blood pressure",
-    medications: [
-      "Statin (e.g., Atorvastatin 10-20mg) OR Beta-blocker (e.g., Metoprolol 50mg)",
-    ],
+    name: 'Single Medication',
+    icon: '💊',
+    description: 'Single medication targeting cholesterol or blood pressure',
+    medications: ['Statin (e.g., Atorvastatin 10-20mg) OR Beta-blocker (e.g., Metoprolol 50mg)'],
     details:
-      "Single medication to manage either cholesterol or blood pressure, combined with lifestyle counseling.",
+      'Single medication to manage either cholesterol or blood pressure, combined with lifestyle counseling.',
   },
   {
     id: 3,
-    name: "Combination Therapy",
-    icon: "💊🏃",
-    description: "Multiple medications plus supervised lifestyle program",
+    name: 'Combination Therapy',
+    icon: '💊🏃',
+    description: 'Multiple medications plus supervised lifestyle program',
     medications: [
-      "Statin (e.g., Atorvastatin 40mg)",
-      "ACE Inhibitor (e.g., Lisinopril 10mg) OR Beta-blocker",
+      'Statin (e.g., Atorvastatin 40mg)',
+      'ACE Inhibitor (e.g., Lisinopril 10mg) OR Beta-blocker',
     ],
     details:
-      "Combination of cholesterol-lowering and blood pressure medication, plus supervised lifestyle program.",
+      'Combination of cholesterol-lowering and blood pressure medication, plus supervised lifestyle program.',
   },
   {
     id: 4,
-    name: "Intensive Treatment",
-    icon: "🏥",
-    description: "Multiple medications with intensive lifestyle management",
+    name: 'Intensive Treatment',
+    icon: '🏥',
+    description: 'Multiple medications with intensive lifestyle management',
     medications: [
-      "High-dose Statin (e.g., Atorvastatin 80mg)",
-      "ACE Inhibitor OR ARB",
-      "Beta-blocker",
-      "Antiplatelet (e.g., Aspirin 81mg)",
+      'High-dose Statin (e.g., Atorvastatin 80mg)',
+      'ACE Inhibitor OR ARB',
+      'Beta-blocker',
+      'Antiplatelet (e.g., Aspirin 81mg)',
     ],
     details:
-      "Multiple medications targeting cholesterol, blood pressure, and blood clotting, with intensive lifestyle coaching and cardiology follow-up.",
+      'Multiple medications targeting cholesterol, blood pressure, and blood clotting, with intensive lifestyle coaching and cardiology follow-up.',
   },
 ];
 
-// Metric labels and descriptions for display
-const METRIC_LABELS = {
-  trestbps: "Blood Pressure (mm Hg)",
-  chol: "Cholesterol (mg/dl)",
-  thalach: "Max Heart Rate (bpm)",
-  oldpeak: "ST Depression (mm)",
-};
+function getRiskLevel(riskScore) {
+  if (riskScore < RISK_LEVELS.low.threshold) return RISK_LEVELS.low;
+  if (riskScore < RISK_LEVELS.moderate.threshold) return RISK_LEVELS.moderate;
+  return RISK_LEVELS.high;
+}
 
-const METRIC_DESCRIPTIONS = {
-  trestbps:
-    "High pressure damages artery walls over time, promoting plaque buildup",
-  chol: "Excess cholesterol forms plaques that narrow arteries and restrict blood flow",
-  thalach:
-    "Lower rates may indicate reduced cardiac capacity or blocked arteries",
-  oldpeak:
-    "Higher values show more severe oxygen deprivation to heart muscle during exertion",
-};
-
-function MetricComparison({ simulation }) {
-  if (!simulation) return null;
-
-  const {
-    current_metrics,
-    optimized_metrics,
-    current_risk,
-    expected_risk,
-    risk_reduction,
-  } = simulation;
-
-  // Prepare data for chart
-  const chartData = Object.keys(current_metrics).map((key) => ({
-    metric: METRIC_LABELS[key] || key,
-    current: parseFloat(current_metrics[key].toFixed(2)),
-    optimized: parseFloat(optimized_metrics[key].toFixed(2)),
-  }));
+function CircularGauge({ value, level }) {
+  const radius = 80;
+  const strokeWidth = 12;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (value / 100) * circumference;
 
   return (
-    <div className="mt-6">
-      <h4 className="text-lg font-semibold text-gray-800 mb-3">
-        Health Metrics Comparison
-      </h4>
-
-      <ResponsiveContainer width="100%" height={250}>
-        <BarChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="metric" angle={-45} textAnchor="end" height={100} />
-          <YAxis />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-            }}
-          />
-          <Legend />
-          <Bar
-            dataKey="current"
-            fill="#94a3b8"
-            name="Current"
-            radius={[8, 8, 0, 0]}
-          />
-          <Bar
-            dataKey="optimized"
-            fill="#0ea5e9"
-            name="After Intervention"
-            radius={[8, 8, 0, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
-
-      {/* Risk Reduction Summary */}
-      <div className="mt-4 grid grid-cols-3 gap-4">
-        <div className="p-4 bg-gray-50 rounded-lg text-center">
-          <div className="text-2xl font-bold text-gray-700">
-            {current_risk.toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Current Risk</div>
-        </div>
-        <div className="p-4 bg-blue-50 rounded-lg text-center">
-          <div className="text-2xl font-bold text-primary-600">
-            {expected_risk.toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Expected Risk</div>
-        </div>
-        <div className="p-4 bg-green-50 rounded-lg text-center">
-          <div className="text-2xl font-bold text-success-600">
-            -{risk_reduction.toFixed(1)}%
-          </div>
-          <div className="text-sm text-gray-600">Risk Reduction</div>
-        </div>
-      </div>
-
-      {/* Metric Descriptions */}
-      <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h5 className="text-sm font-semibold text-gray-800 mb-2">
-          Understanding Key Metrics:
-        </h5>
-        <div className="space-y-2">
-          {Object.keys(current_metrics).map((key) => (
-            <div key={key} className="text-xs text-gray-700">
-              <span className="font-semibold">{METRIC_LABELS[key]}:</span>{" "}
-              {METRIC_DESCRIPTIONS[key]}
-            </div>
-          ))}
-        </div>
+    <div className="relative inline-flex items-center justify-center">
+      <svg
+        width={radius * 2 + strokeWidth * 2}
+        height={radius * 2 + strokeWidth * 2}
+        className="transform -rotate-90"
+      >
+        {/* Background circle */}
+        <circle
+          cx={radius + strokeWidth}
+          cy={radius + strokeWidth}
+          r={radius}
+          stroke="#e5e7eb"
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={radius + strokeWidth}
+          cy={radius + strokeWidth}
+          r={radius}
+          stroke={level.gaugeColor}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-1000 ease-out"
+        />
+      </svg>
+      {/* Center text */}
+      <div className="absolute flex flex-col items-center">
+        <span className="text-4xl font-bold text-gray-800">{value.toFixed(1)}%</span>
+        <span className="text-sm text-gray-600">Risk Score</span>
       </div>
     </div>
   );
 }
 
-function QValueChart({ qValues }) {
-  if (!qValues) return null;
+function FeatureImportanceChart({ featureImportance }) {
+  // Convert feature importance object to array and sort by importance
+  const chartData = Object.entries(featureImportance)
+    .map(([feature, importance]) => ({
+      feature: FEATURE_LABELS[feature] || feature,
+      importance: (importance * 100).toFixed(1), // Convert to percentage
+      importanceValue: importance,
+    }))
+    .sort((a, b) => b.importanceValue - a.importanceValue)
+    .slice(0, 5); // Top 5 features
 
-  // Convert Q-values object to array for chart
-  const chartData = Object.entries(qValues).map(([action, value]) => ({
-    action,
-    qValue: parseFloat(value.toFixed(3)),
-  }));
+  // Color gradient for bars
+  const colors = ['#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#e0f2fe'];
 
   return (
     <div className="mt-6">
-      <h4 className="text-lg font-semibold text-gray-800 mb-3">
-        Action Q-Values
-      </h4>
-      <ResponsiveContainer width="100%" height={200}>
+      <h4 className="text-lg font-semibold text-gray-800 mb-3">Top Risk Factors</h4>
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart
           data={chartData}
-          margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+          layout="vertical"
+          margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="action" angle={-45} textAnchor="end" height={100} />
-          <YAxis />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
+          <XAxis
+            type="number"
+            domain={[0, 'auto']}
+            label={{
+              value: 'Importance (%)',
+              position: 'insideBottom',
+              offset: -5,
             }}
           />
-          <Bar
-            dataKey="qValue"
-            fill="#0ea5e9"
-            name="Q-Value"
-            radius={[8, 8, 0, 0]}
+          <YAxis type="category" dataKey="feature" />
+          <Tooltip
+            formatter={(value) => [`${value}%`, 'Importance']}
+            contentStyle={{
+              backgroundColor: '#fff',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+            }}
           />
+          <Bar dataKey="importance" radius={[0, 8, 8, 0]}>
+            {chartData.map((_, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index]} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
       <p className="text-xs text-gray-500 mt-2 text-center">
-        Higher Q-values indicate better expected long-term outcomes
+        Features ranked by their contribution to the risk prediction
       </p>
     </div>
   );
 }
 
-export default function RecommendationPanel({ recommendation, patientData }) {
-  const [simulation, setSimulation] = useState(null);
-  const [simulatingAction, setSimulatingAction] = useState(null);
-  const [simulatedActionId, setSimulatedActionId] = useState(null);
-  const [error, setError] = useState(null);
+function InterventionComparisonTable({ allOptions }) {
+  if (!allOptions || allOptions.length === 0) return null;
 
+  return (
+    <div className="mt-6">
+      <h4 className="text-lg font-semibold text-gray-800 mb-3">
+        Comparing All Intervention Options
+      </h4>
+      <p className="text-sm text-gray-600 mb-4">
+        This table shows expected outcomes for all possible interventions, helping you understand
+        why the recommended option is best for your risk level.
+      </p>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Intervention
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                New Risk
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Risk Reduction
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Cost
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Side Effects
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Monitoring
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {allOptions.map((option) => {
+              const isRecommended = option.is_recommended;
+              const isAlternative = option.is_alternative;
+              const rowClass = isRecommended
+                ? 'bg-primary-50 border-l-4 border-primary-500'
+                : isAlternative
+                  ? 'bg-blue-50 border-l-4 border-blue-400'
+                  : '';
+
+              return (
+                <tr key={option.action_id} className={rowClass}>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-2">{ACTIONS[option.action_id]?.icon}</span>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900 flex items-center">
+                          {option.name}
+                          {isRecommended && (
+                            <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-primary-700 bg-primary-200 rounded">
+                              RECOMMENDED
+                            </span>
+                          )}
+                          {isAlternative && !isRecommended && (
+                            <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-blue-700 bg-blue-200 rounded">
+                              ALTERNATIVE
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">{option.description}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="text-sm font-semibold text-gray-900">
+                      {option.new_risk.toFixed(1)}%
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      <div className="font-semibold text-success-600">
+                        -{option.risk_reduction.toFixed(1)}%
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        ({option.pct_reduction.toFixed(1)}% relative)
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {option.cost}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {option.side_effects}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700">{option.monitoring}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-gray-700">
+          <strong>Why this recommendation?</strong> The recommended intervention is selected based
+          on your risk tier, balancing effectiveness (risk reduction) with cost, side effects, and
+          monitoring burden. The alternative option provides a different balance that may be
+          appropriate depending on your personal circumstances.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function RecommendationPanel({ recommendation, riskPrediction }) {
   if (!recommendation) return null;
 
-  const {
-    action,
-    action_name,
-    description,
-    cost,
-    intensity,
-    q_values,
-    rationale,
-    risk_factors,
-  } = recommendation;
+  // Handle both old and new API response formats
+  const isNewFormat = 'recommended_action' in recommendation;
 
-  const recommendedAction = ACTIONS[action];
+  const recommendedActionId = isNewFormat
+    ? recommendation.recommended_action
+    : recommendation.action;
+  const actionName = isNewFormat ? recommendation.recommendation_name : recommendation.action_name;
+  const description = isNewFormat
+    ? recommendation.recommendation_description
+    : recommendation.description;
+  const rationale = recommendation.rationale;
+  const allOptions = isNewFormat ? recommendation.all_options : null;
 
-  const handleSimulate = async (actionId) => {
-    setSimulatingAction(actionId);
-    setError(null);
+  // Get old format fields if available
+  const cost = recommendation.cost;
+  const intensity = recommendation.intensity;
+  const riskFactors = recommendation.risk_factors;
 
-    try {
-      const result = await simulateIntervention(patientData, actionId);
-      setSimulation(result);
-      setSimulatedActionId(actionId); // Track which action was simulated
-    } catch (err) {
-      setError(err.message);
-      console.error("Simulation failed:", err);
-    } finally {
-      setSimulatingAction(null);
-    }
-  };
+  const recommendedAction = ACTIONS[recommendedActionId];
+
+  // Extract risk prediction data
+  const riskScore = riskPrediction?.risk_score;
+  const featureImportance = riskPrediction?.feature_importance;
+  const level = riskScore !== undefined ? getRiskLevel(riskScore) : null;
 
   return (
     <div className="card">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Recommended Intervention
+        Risk Assessment & Personalized Recommendation
       </h2>
+
+      {/* Risk Assessment Section */}
+      {riskScore !== undefined && level && (
+        <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-white rounded-lg border border-blue-200">
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Your Cardiovascular Risk</h3>
+
+          <div className="flex flex-col items-center">
+            {/* Circular Gauge */}
+            <CircularGauge value={riskScore} level={level} />
+
+            {/* Risk Classification Badge */}
+            <div
+              className={`mt-6 px-6 py-3 rounded-full border-2 ${level.bgColor} ${level.borderColor}`}
+            >
+              <span className={`text-xl font-bold ${level.color}`}>{level.label}</span>
+            </div>
+
+            {/* Risk Interpretation */}
+            <div className="mt-4 text-center max-w-2xl">
+              <p className="text-sm text-gray-600">
+                Based on your clinical indicators, you have a{' '}
+                <strong className={level.color}>{riskScore.toFixed(1)}%</strong> probability of
+                coronary artery disease (≥50% vessel narrowing).
+                {level === RISK_LEVELS.high && (
+                  <> Medical evaluation and intervention are recommended.</>
+                )}
+                {level === RISK_LEVELS.moderate && (
+                  <> Regular monitoring and risk factor management are advised.</>
+                )}
+                {level === RISK_LEVELS.low && (
+                  <> Continue monitoring and maintain a healthy lifestyle.</>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Feature Importance Chart */}
+          {featureImportance && <FeatureImportanceChart featureImportance={featureImportance} />}
+
+          {/* Explanation */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="mb-3">
+              <h4 className="text-sm font-bold text-gray-800 mb-2">
+                What does this risk score mean?
+              </h4>
+              <p className="text-sm text-gray-700 mb-2">
+                This score represents the probability of{' '}
+                <strong>Coronary Artery Disease (CAD)</strong> - significant narrowing (≥50%
+                blockage) in the arteries that supply blood to your heart muscle.
+              </p>
+            </div>
+
+            {/* Life Quality and Expectancy Impact */}
+            <div className="mb-3 p-3 bg-amber-50 rounded-lg border border-amber-300">
+              <h4 className="text-sm font-bold text-gray-800 mb-2 flex items-center">
+                <span className="mr-2">⚠️</span>
+                Impact on Life Quality and Life Expectancy:
+              </h4>
+              <div className="space-y-2">
+                <div>
+                  <p className="text-xs font-semibold text-gray-800 mb-1">Quality of Life:</p>
+                  <ul className="text-xs text-gray-700 ml-4 space-y-0.5">
+                    <li>
+                      • <strong>Physical Limitations:</strong> Reduced exercise tolerance, fatigue
+                      during daily activities
+                    </li>
+                    <li>
+                      • <strong>Angina Symptoms:</strong> Frequent chest pain limiting work, travel,
+                      and recreation
+                    </li>
+                    <li>
+                      • <strong>Psychological Impact:</strong> Anxiety about heart events,
+                      depression from activity restrictions
+                    </li>
+                    <li>
+                      • <strong>Treatment Burden:</strong> Daily medications, frequent doctor
+                      visits, potential procedures (stents, bypass)
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-800 mb-1">Life Expectancy:</p>
+                  <ul className="text-xs text-gray-700 ml-4 space-y-0.5">
+                    <li>
+                      • <strong>Untreated CAD:</strong> Reduces life expectancy by 7-10 years on
+                      average, with 3-5x higher risk of heart attack
+                    </li>
+                    <li>
+                      • <strong>With Treatment:</strong> Modern interventions can restore
+                      near-normal life expectancy if started early
+                    </li>
+                    <li>
+                      • <strong>Post-Heart Attack:</strong> 5-year survival rate is ~75%, with
+                      higher risk of recurrent events
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-2 mt-2 border-t border-amber-300">
+                  <p className="text-xs font-semibold text-green-700">
+                    ✓ Good News: Early detection and intervention dramatically improve outcomes
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <h4 className="text-sm font-bold text-gray-800 mb-2">
+                What conditions could develop?
+              </h4>
+              <p className="text-sm text-gray-700 mb-2">
+                If left untreated, coronary artery disease can lead to:
+              </p>
+              <ul className="text-sm text-gray-700 ml-4 space-y-1">
+                <li>
+                  • <strong>Angina</strong> - chest pain or discomfort due to reduced blood flow
+                </li>
+                <li>
+                  • <strong>Heart Attack (Myocardial Infarction)</strong> - if a coronary artery
+                  becomes completely blocked
+                </li>
+                <li>
+                  • <strong>Heart Failure</strong> - weakened heart muscle from chronic oxygen
+                  deprivation
+                </li>
+                <li>
+                  • <strong>Arrhythmias</strong> - irregular heartbeats due to damaged heart tissue
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-gray-800 mb-2">
+                Understanding the top risk factors:
+              </h4>
+              <p className="text-sm text-gray-700">
+                The chart above shows which of your clinical measurements contribute most to this
+                prediction. Higher importance means that factor has more influence on your
+                individual risk assessment.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Clinical Rationale Section */}
       {rationale && (
         <div className="mb-6 p-5 bg-blue-50 border-l-4 border-primary-500 rounded-r-lg">
           <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center">
             <span className="mr-2">🩺</span>
-            Clinical Assessment
+            Clinical Rationale
           </h3>
           <p className="text-gray-700 leading-relaxed">{rationale}</p>
         </div>
       )}
 
-      {/* Risk Factors Section */}
-      {risk_factors &&
-        risk_factors.details &&
-        risk_factors.details.length > 0 && (
-          <div className="mb-6 p-5 bg-amber-50 border-l-4 border-warning-500 rounded-r-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-              <span className="mr-2">⚠️</span>
-              Identified Risk Factors
-            </h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {risk_factors.severe_count > 0 && (
-                <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
-                  {risk_factors.severe_count} Severe
-                </span>
-              )}
-              {risk_factors.moderate_count > 0 && (
-                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
-                  {risk_factors.moderate_count} Moderate
-                </span>
-              )}
-            </div>
-            <ul className="space-y-1">
-              {risk_factors.details.map((factor, index) => (
-                <li key={index} className="text-gray-700 flex items-start">
-                  <span className="mr-2 text-warning-600">•</span>
-                  <span className="capitalize">{factor}</span>
-                </li>
-              ))}
-            </ul>
+      {/* Risk Factors Section (old format) */}
+      {riskFactors && riskFactors.details && riskFactors.details.length > 0 && (
+        <div className="mb-6 p-5 bg-amber-50 border-l-4 border-warning-500 rounded-r-lg">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2">⚠️</span>
+            Identified Risk Factors
+          </h3>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {riskFactors.severe_count > 0 && (
+              <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                {riskFactors.severe_count} Severe
+              </span>
+            )}
+            {riskFactors.moderate_count > 0 && (
+              <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-semibold">
+                {riskFactors.moderate_count} Moderate
+              </span>
+            )}
           </div>
-        )}
+          <ul className="space-y-1">
+            {riskFactors.details.map((factor, index) => (
+              <li key={index} className="text-gray-700 flex items-start">
+                <span className="mr-2 text-warning-600">•</span>
+                <span className="capitalize">{factor}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Recommended Action */}
       <div className="p-6 bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg border-2 border-primary-500 mb-6">
         <div className="flex items-start">
           <div className="text-4xl mr-4">{recommendedAction.icon}</div>
           <div className="flex-1">
-            <h3 className="text-2xl font-bold text-primary-700 mb-2">
-              {action_name}
-            </h3>
+            <h3 className="text-2xl font-bold text-primary-700 mb-2">{actionName}</h3>
             <p className="text-gray-700 mb-3">{description}</p>
 
             {/* Medications Section */}
-            {recommendedAction.medications &&
-              recommendedAction.medications.length > 0 && (
-                <div className="mb-3 p-3 bg-white rounded-lg border border-primary-200">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2">
-                    💊 Medications:
-                  </h4>
-                  <ul className="space-y-1">
-                    {recommendedAction.medications.map((med, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-gray-700 flex items-start"
-                      >
-                        <span className="mr-2 text-primary-600">•</span>
-                        <span>{med}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+            {recommendedAction.medications && recommendedAction.medications.length > 0 && (
+              <div className="mb-3 p-3 bg-white rounded-lg border border-primary-200">
+                <h4 className="text-sm font-semibold text-gray-800 mb-2">💊 Medications:</h4>
+                <ul className="space-y-1">
+                  {recommendedAction.medications.map((med, index) => (
+                    <li key={index} className="text-sm text-gray-700 flex items-start">
+                      <span className="mr-2 text-primary-600">•</span>
+                      <span>{med}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* Details */}
             {recommendedAction.details && (
-              <p className="text-sm text-gray-600 mb-3 italic">
-                {recommendedAction.details}
-              </p>
+              <p className="text-sm text-gray-600 mb-3 italic">{recommendedAction.details}</p>
             )}
 
-            <div className="flex flex-wrap gap-4 text-sm">
-              <div>
-                <span className="font-semibold text-gray-700">Cost:</span>{" "}
-                <span className="text-gray-600">{cost}</span>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700">Intensity:</span>{" "}
-                <span className="text-gray-600">{intensity}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Q-Values Chart */}
-      {q_values && <QValueChart qValues={q_values} />}
-
-      {/* Alternative Interventions */}
-      <div className="mt-6">
-        <h4 className="text-lg font-semibold text-gray-800 mb-3">
-          Explore Alternative Interventions
-        </h4>
-        <p className="text-sm text-gray-600 mb-4">
-          Click on any intervention to simulate its effect on health metrics
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {ACTIONS.map((act) => {
-            const isRecommended = act.id === action;
-            const isSimulated = act.id === simulatedActionId;
-            const isSimulating = act.id === simulatingAction;
-
-            return (
-              <button
-                key={act.id}
-                onClick={() => handleSimulate(act.id)}
-                disabled={simulatingAction !== null}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  isSimulated
-                    ? "border-green-500 bg-green-50 ring-2 ring-green-300"
-                    : isRecommended
-                      ? "border-primary-500 bg-primary-50"
-                      : "border-gray-200 bg-white hover:border-primary-300 hover:bg-gray-50"
-                } ${isSimulating ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-2">{act.icon}</span>
-                    <span className="font-semibold text-gray-800 text-sm">
-                      {act.name}
-                    </span>
-                  </div>
-                  {isSimulated && !isSimulating && (
-                    <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded">
-                      Viewing
-                    </span>
-                  )}
-                  {isRecommended && !isSimulated && (
-                    <span className="text-xs font-semibold text-primary-600 bg-primary-100 px-2 py-1 rounded">
-                      AI Recommended
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-600">{act.description}</p>
-                {isSimulating && (
-                  <div className="mt-2 text-xs text-primary-600 font-semibold">
-                    Simulating...
+            {/* Cost and Intensity (old format) */}
+            {(cost || intensity) && (
+              <div className="flex flex-wrap gap-4 text-sm">
+                {cost && (
+                  <div>
+                    <span className="font-semibold text-gray-700">Cost:</span>{' '}
+                    <span className="text-gray-600">{cost}</span>
                   </div>
                 )}
-              </button>
-            );
-          })}
+                {intensity && (
+                  <div>
+                    <span className="font-semibold text-gray-700">Intensity:</span>{' '}
+                    <span className="text-gray-600">{intensity}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Simulation Results */}
-      {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-700">Error: {error}</p>
-        </div>
-      )}
-
-      {simulation && simulatedActionId !== null && (
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-lg font-semibold text-gray-800">
-              Simulation Results: {ACTIONS[simulatedActionId].name}
-            </h4>
-            <span className="text-sm text-gray-600">
-              {ACTIONS[simulatedActionId].icon}
-            </span>
-          </div>
-          <MetricComparison simulation={simulation} />
-        </div>
-      )}
+      {/* Intervention Comparison Table (new format) */}
+      {allOptions && <InterventionComparisonTable allOptions={allOptions} />}
 
       {/* Information Box */}
       <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
         <p className="text-sm text-gray-700">
-          <strong>Note:</strong> These recommendations are based on established
-          clinical guidelines and AI risk assessment. This is a demonstration
-          system - always consult with healthcare professionals before making
-          medical decisions.
+          <strong>Note:</strong> These recommendations are based on risk-stratified analysis and
+          clinical guidelines. This is a demonstration system - always consult with healthcare
+          professionals before making medical decisions.
         </p>
       </div>
     </div>

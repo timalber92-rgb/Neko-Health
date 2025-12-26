@@ -21,8 +21,8 @@ from fastapi.testclient import TestClient
 
 from api.main import app
 from data.load import load_processed_data
+from ml.guideline_recommender import GuidelineRecommender
 from ml.risk_predictor import RiskPredictor
-from ml.rl_agent import InterventionAgent
 
 
 @pytest.fixture(scope="module")
@@ -32,8 +32,8 @@ def processed_data():
     This fixture is module-scoped to avoid reloading data for each test.
     """
     try:
-        train_df, val_df, test_df, scaler = load_processed_data()
-        return {"train": train_df, "val": val_df, "test": test_df, "scaler": scaler}
+        train_df, val_df, test_df = load_processed_data()
+        return {"train": train_df, "val": val_df, "test": test_df}
     except Exception as e:
         pytest.skip(f"Could not load processed data: {str(e)}")
 
@@ -59,17 +59,12 @@ def trained_risk_predictor(processed_data):
 
 
 @pytest.fixture(scope="module")
-def trained_rl_agent(processed_data, trained_risk_predictor):
+def guideline_recommender():
     """
-    Train an RL agent for integration testing.
-    Module-scoped to train only once.
+    Create a guideline-based recommender for integration testing.
+    Module-scoped since it doesn't require training.
     """
-    train_df = processed_data["train"]
-
-    agent = InterventionAgent(n_bins=5, epsilon=0.1, alpha=0.1, gamma=0.95)
-    agent.train(train_df, trained_risk_predictor, episodes=500)
-
-    return agent
+    return GuidelineRecommender()
 
 
 @pytest.fixture
@@ -209,28 +204,19 @@ class TestModelPersistence:
 
             assert result1["risk_score"] == result2["risk_score"]
 
-    def test_rl_agent_save_load(self, trained_rl_agent, trained_risk_predictor, processed_data):
-        """Test RL agent persistence"""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            agent_path = Path(tmpdir) / "rl_agent.pkl"
+    def test_guideline_recommender_deterministic(self, guideline_recommender, trained_risk_predictor, processed_data):
+        """Test that guideline recommender gives consistent recommendations"""
+        test_df = processed_data["test"]
+        features = test_df.drop("target", axis=1)
+        patient = features.iloc[[0]]
 
-            # Save
-            trained_rl_agent.save(agent_path)
-            assert agent_path.exists()
+        # Get recommendation twice - should be identical (deterministic)
+        rec1 = guideline_recommender.recommend(patient, trained_risk_predictor)
+        rec2 = guideline_recommender.recommend(patient, trained_risk_predictor)
 
-            # Load
-            new_agent = InterventionAgent()
-            new_agent.load(agent_path)
-
-            # Test on same data
-            test_df = processed_data["test"]
-            features = test_df.drop("target", axis=1)
-            patient = features.iloc[[0]]
-
-            rec1 = trained_rl_agent.recommend(patient, trained_risk_predictor)
-            rec2 = new_agent.recommend(patient, trained_risk_predictor)
-
-            assert rec1["action"] == rec2["action"]
+        assert rec1["action"] == rec2["action"]
+        assert rec1["current_risk"] == rec2["current_risk"]
+        assert rec1["expected_final_risk"] == rec2["expected_final_risk"]
 
 
 class TestAPIIntegration:

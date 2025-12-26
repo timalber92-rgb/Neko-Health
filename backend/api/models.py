@@ -106,7 +106,6 @@ class InterventionRecommendation(BaseModel):
     expected_risk_reduction: float = Field(..., description="Expected reduction in risk (%)")
     rationale: Optional[str] = Field(None, description="Clinical rationale for the recommendation")
     risk_factors: Optional[RiskFactorDetails] = Field(None, description="Identified risk factors")
-    q_values: Optional[Dict[str, float]] = Field(None, description="Q-values for all actions (RL agent only)")
 
     model_config = {
         "json_schema_extra": {
@@ -129,7 +128,6 @@ class InterventionRecommendation(BaseModel):
                         "exercise-induced angina",
                     ],
                 },
-                "q_values": None,
             }
         }
     }
@@ -182,6 +180,9 @@ class HealthStatus(BaseModel):
     current_risk: float = Field(..., description="Current risk score (%)")
     expected_risk: float = Field(..., description="Expected risk after intervention (%)")
     risk_reduction: float = Field(..., description="Expected risk reduction (%)")
+    explanation: Optional[str] = Field(None, description="Clinical explanation of why risk changed (or didn't change)")
+    feature_importance: Optional[Dict[str, float]] = Field(None, description="Top risk factors driving the prediction")
+    modifiable_features: Optional[List[str]] = Field(None, description="Features that were modified by the intervention")
 
     model_config = {
         "json_schema_extra": {
@@ -191,6 +192,9 @@ class HealthStatus(BaseModel):
                 "current_risk": 78.5,
                 "expected_risk": 52.3,
                 "risk_reduction": 26.2,
+                "explanation": "Blood pressure reduced by 21.7 mmHg and cholesterol by 46.6 mg/dL. These changes contributed to a 26.2% risk reduction. The primary risk drivers are thalassemia status and vessel disease, which cannot be modified by this intervention.",
+                "feature_importance": {"thal": 0.166, "ca": 0.143, "cp": 0.123, "oldpeak": 0.108, "thalach": 0.091},
+                "modifiable_features": ["trestbps", "chol", "thalach", "oldpeak"],
             }
         }
     }
@@ -205,6 +209,70 @@ class ErrorResponse(BaseModel):
     detail: Optional[str] = Field(None, description="Detailed error information")
 
     model_config = {"json_schema_extra": {"example": {"error": "Prediction failed", "detail": "Model not loaded properly"}}}
+
+
+class InterventionOption(BaseModel):
+    """Details about a single intervention option."""
+
+    action_id: int = Field(..., description="Action ID (1-4)")
+    name: str = Field(..., description="Intervention name")
+    description: str = Field(..., description="Intervention description")
+    new_risk: float = Field(..., description="Expected risk after intervention (%)")
+    risk_reduction: float = Field(..., description="Absolute risk reduction (%)")
+    pct_reduction: float = Field(..., description="Percentage risk reduction (%)")
+    cost: str = Field(..., description="Cost level (Low/Moderate/High)")
+    side_effects: str = Field(..., description="Side effect profile")
+    monitoring: str = Field(..., description="Required monitoring frequency")
+    is_recommended: bool = Field(..., description="Whether this is the primary recommendation")
+    is_alternative: bool = Field(..., description="Whether this is the alternative recommendation")
+
+
+class PersonalizedRecommendation(BaseModel):
+    """
+    Response model for personalized intervention recommendations.
+
+    Provides risk-stratified recommendations with clinical context.
+    """
+
+    recommended_action: int = Field(..., description="Primary recommended action ID")
+    recommendation_name: str = Field(..., description="Primary recommendation name")
+    recommendation_description: str = Field(..., description="Primary recommendation description")
+    rationale: str = Field(..., description="Clinical rationale for the recommendation")
+    alternative_action: int = Field(..., description="Alternative action ID")
+    alternative_name: str = Field(..., description="Alternative recommendation name")
+    all_options: List[InterventionOption] = Field(..., description="All intervention options with outcomes")
+    baseline_risk: float = Field(..., description="Patient's baseline risk (%)")
+    risk_tier: str = Field(..., description="Risk classification tier")
+
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "recommended_action": 3,
+                "recommendation_name": "Combination Therapy",
+                "recommendation_description": "BP medication AND statin therapy",
+                "rationale": "Your cardiovascular risk is elevated (65.3%). Combination therapy (BP medication + statin) offers a good balance of effectiveness and tolerability for your risk level.",
+                "alternative_action": 4,
+                "alternative_name": "Intensive Treatment",
+                "all_options": [
+                    {
+                        "action_id": 2,
+                        "name": "Single Medication",
+                        "description": "BP medication OR statin therapy",
+                        "new_risk": 54.2,
+                        "risk_reduction": 11.1,
+                        "pct_reduction": 17.0,
+                        "cost": "Low-Moderate",
+                        "side_effects": "Low",
+                        "monitoring": "Quarterly check-ups",
+                        "is_recommended": False,
+                        "is_alternative": False,
+                    }
+                ],
+                "baseline_risk": 65.3,
+                "risk_tier": "High Risk",
+            }
+        }
+    }
 
 
 class HealthCheckResponse(BaseModel):

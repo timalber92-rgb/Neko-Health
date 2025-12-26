@@ -1,12 +1,10 @@
-import { useState } from "react";
-import PatientForm from "./components/PatientForm";
-import RiskDisplay from "./components/RiskDisplay";
-import RecommendationPanel from "./components/RecommendationPanel";
-import { getFullAnalysis } from "./api/client";
+import { useState } from 'react';
+import PatientForm from './components/PatientForm';
+import RecommendationPanel from './components/RecommendationPanel';
+import { getFullAnalysis } from './api/client';
 
 function App() {
   const [loading, setLoading] = useState(false);
-  const [patientData, setPatientData] = useState(null);
   const [riskPrediction, setRiskPrediction] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
   const [error, setError] = useState(null);
@@ -14,7 +12,6 @@ function App() {
   const handleAnalyze = async (formData) => {
     setLoading(true);
     setError(null);
-    setPatientData(formData);
     setRiskPrediction(null);
     setRecommendation(null);
 
@@ -24,13 +21,11 @@ function App() {
       setRecommendation(rec);
 
       setTimeout(() => {
-        document
-          .getElementById("results")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } catch (err) {
       setError(err.message);
-      console.error("Analysis failed:", err);
+      console.error('Analysis failed:', err);
     } finally {
       setLoading(false);
     }
@@ -59,8 +54,8 @@ function App() {
               Coronary Artery Disease Risk Prediction
             </h2>
             <p className="text-gray-600 max-w-3xl mx-auto">
-              Enter patient clinical measurements to receive AI-powered risk
-              assessment and evidence-based intervention recommendations.
+              Enter patient clinical measurements to receive AI-powered risk assessment and
+              evidence-based intervention recommendations.
             </p>
           </div>
         </div>
@@ -76,22 +71,9 @@ function App() {
           </div>
         )}
 
-        {(riskPrediction || recommendation) && (
-          <div id="results" className="space-y-8">
-            {riskPrediction && (
-              <div className="animate-fadeIn">
-                <RiskDisplay prediction={riskPrediction} />
-              </div>
-            )}
-
-            {recommendation && patientData && (
-              <div className="animate-fadeIn">
-                <RecommendationPanel
-                  recommendation={recommendation}
-                  patientData={patientData}
-                />
-              </div>
-            )}
+        {recommendation && (
+          <div id="results" className="animate-fadeIn">
+            <RecommendationPanel recommendation={recommendation} riskPrediction={riskPrediction} />
           </div>
         )}
       </main>

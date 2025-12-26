@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Tuple
 from urllib.request import urlretrieve
 
-import joblib
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+
+# StandardScaler removed - Logistic Regression works with raw features
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -163,11 +163,11 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 def preprocess_data(
     df: pd.DataFrame, test_size: float = 0.15, val_size: float = 0.15, random_state: int = 42
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, StandardScaler]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Preprocess the cleaned data: normalize features and create train/val/test splits.
 
-    Features are normalized using StandardScaler (zero mean, unit variance).
+    Features are NOT scaled (Random Forest doesn't require normalization).
     Data is split into train (70%), validation (15%), and test (15%) sets
     with stratification to maintain class balance.
 
@@ -182,7 +182,6 @@ def preprocess_data(
             - train_df: Training set DataFrame
             - val_df: Validation set DataFrame
             - test_df: Test set DataFrame
-            - scaler: Fitted StandardScaler for inference time
 
     Raises:
         ValueError: If split sizes are invalid or data is insufficient
@@ -220,43 +219,35 @@ def preprocess_data(
     logger.info(f"Val set class balance: {y_val.value_counts(normalize=True).to_dict()}")
     logger.info(f"Test set class balance: {y_test.value_counts(normalize=True).to_dict()}")
 
-    # Fit scaler on training data only (prevent data leakage)
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_val_scaled = scaler.transform(X_val)
-    X_test_scaled = scaler.transform(X_test)
+    # Random Forest doesn't require feature scaling - use raw values
+    # This simplifies intervention simulation and makes the model more interpretable
+    logger.info("Using raw feature values (no scaling needed for Random Forest)")
 
-    logger.info("Features normalized using StandardScaler")
-    logger.info(f"Example feature means after scaling: " f"{X_train_scaled.mean(axis=0)[:3]}")
-    logger.info(f"Example feature stds after scaling: " f"{X_train_scaled.std(axis=0)[:3]}")
-
-    # Convert back to DataFrames with original column names
-    train_df = pd.DataFrame(X_train_scaled, columns=X.columns)
+    # Create DataFrames with original column names and raw values
+    train_df = pd.DataFrame(X_train, columns=X.columns)
     train_df["target"] = y_train.values
 
-    val_df = pd.DataFrame(X_val_scaled, columns=X.columns)
+    val_df = pd.DataFrame(X_val, columns=X.columns)
     val_df["target"] = y_val.values
 
-    test_df = pd.DataFrame(X_test_scaled, columns=X.columns)
+    test_df = pd.DataFrame(X_test, columns=X.columns)
     test_df["target"] = y_test.values
 
     logger.info("Preprocessing complete")
 
-    return train_df, val_df, test_df, scaler
+    return train_df, val_df, test_df
 
 
-def save_processed_data(train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame, scaler: StandardScaler) -> None:
+def save_processed_data(train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame) -> None:
     """
-    Save processed datasets and scaler to disk.
+    Save processed datasets to disk.
 
-    Saves train/val/test CSVs and the fitted StandardScaler for later use
-    during model inference.
+    Saves train/val/test CSVs for later use during model training.
 
     Args:
         train_df: Training set DataFrame
         val_df: Validation set DataFrame
         test_df: Test set DataFrame
-        scaler: Fitted StandardScaler
 
     Raises:
         IOError: If files cannot be written to disk
@@ -271,35 +262,32 @@ def save_processed_data(train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: p
         test_df.to_csv(TEST_DATA_PATH, index=False)
         logger.info(f"Saved test data to {TEST_DATA_PATH}")
 
-        joblib.dump(scaler, SCALER_PATH)
-        logger.info(f"Saved scaler to {SCALER_PATH}")
+        logger.info("No scaler needed for Random Forest (using raw features)")
 
     except Exception as e:
         logger.error(f"Failed to save processed data: {str(e)}")
         raise
 
 
-def load_processed_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, StandardScaler]:
+def load_processed_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Load pre-processed data for model training and evaluation.
 
-    Loads the train, validation, and test sets along with the fitted
-    StandardScaler. If processed data doesn't exist, runs the full
-    pipeline to create it.
+    Loads the train, validation, and test sets. If processed data doesn't
+    exist, runs the full pipeline to create it.
 
     Returns:
         Tuple containing:
             - train_df: Training set DataFrame
             - val_df: Validation set DataFrame
             - test_df: Test set DataFrame
-            - scaler: Fitted StandardScaler
 
     Raises:
         FileNotFoundError: If processed files don't exist and raw data cannot be found
         IOError: If files cannot be read
     """
     # Check if all processed files exist
-    required_files = [TRAIN_DATA_PATH, VAL_DATA_PATH, TEST_DATA_PATH, SCALER_PATH]
+    required_files = [TRAIN_DATA_PATH, VAL_DATA_PATH, TEST_DATA_PATH]
     all_exist = all(f.exists() for f in required_files)
 
     if not all_exist:
@@ -316,10 +304,9 @@ def load_processed_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Sta
         test_df = pd.read_csv(TEST_DATA_PATH)
         logger.info(f"Loaded test data: {test_df.shape}")
 
-        scaler = joblib.load(SCALER_PATH)
-        logger.info("Loaded StandardScaler")
+        logger.info("Using raw features (no scaler needed for Random Forest)")
 
-        return train_df, val_df, test_df, scaler
+        return train_df, val_df, test_df
 
     except Exception as e:
         logger.error(f"Failed to load processed data: {str(e)}")
@@ -357,11 +344,11 @@ def run_pipeline() -> None:
 
         # Step 3: Preprocess data
         logger.info("\n[STEP 3/4] Preprocessing and splitting data...")
-        train_df, val_df, test_df, scaler = preprocess_data(df_clean)
+        train_df, val_df, test_df = preprocess_data(df_clean)
 
         # Step 4: Save processed data
         logger.info("\n[STEP 4/4] Saving processed data...")
-        save_processed_data(train_df, val_df, test_df, scaler)
+        save_processed_data(train_df, val_df, test_df)
 
         logger.info("\n" + "=" * 60)
         logger.info("PIPELINE COMPLETED SUCCESSFULLY")
@@ -370,7 +357,7 @@ def run_pipeline() -> None:
         logger.info(f"- Training set: {TRAIN_DATA_PATH.name}")
         logger.info(f"- Validation set: {VAL_DATA_PATH.name}")
         logger.info(f"- Test set: {TEST_DATA_PATH.name}")
-        logger.info(f"- Scaler: {SCALER_PATH.name}")
+        logger.info("- No scaler needed (Random Forest uses raw features)")
 
     except Exception as e:
         logger.error(f"\nPIPELINE FAILED: {str(e)}")
@@ -385,7 +372,7 @@ if __name__ == "__main__":
     logger.info("\n" + "=" * 60)
     logger.info("TESTING DATA LOADING")
     logger.info("=" * 60)
-    train_df, val_df, test_df, scaler = load_processed_data()
+    train_df, val_df, test_df = load_processed_data()
 
     logger.info("\nData successfully loaded and ready for model training!")
     logger.info(f"Training samples: {len(train_df)}")
