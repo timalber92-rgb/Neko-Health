@@ -351,13 +351,16 @@ class GuidelineRecommender:
 
         return " ".join(rationale_parts)
 
-    def recommend(self, patient_data: pd.DataFrame, risk_predictor) -> Dict[str, Any]:
+    def recommend(
+        self, patient_data: pd.DataFrame, risk_predictor, denormalized_data: Optional[pd.DataFrame] = None
+    ) -> Dict[str, Any]:
         """
         Recommend optimal intervention for a patient using clinical guidelines.
 
         Args:
             patient_data: Patient features (raw values - no normalization needed)
             risk_predictor: Trained RiskPredictor to estimate risk scores
+            denormalized_data: Optional raw patient data for accurate threshold checking (defaults to patient_data if not provided)
 
         Returns:
             Dictionary containing:
@@ -372,12 +375,15 @@ class GuidelineRecommender:
                 - rationale: Clinical reasoning for the recommendation
                 - risk_factors: Details of identified risk factors
         """
+        # Use denormalized_data if provided, otherwise use patient_data
+        data_for_thresholds = denormalized_data if denormalized_data is not None else patient_data
+
         # Get current risk prediction
         current_prediction = risk_predictor.predict(patient_data)
         current_risk = current_prediction["risk_score"]
 
         # Count risk factors using raw patient data
-        risk_factors = self._count_risk_factors(patient_data, patient_data)
+        risk_factors = self._count_risk_factors(patient_data, data_for_thresholds)
 
         # Get base recommendation from risk score
         base_action = self._get_base_recommendation(current_risk)
@@ -390,7 +396,7 @@ class GuidelineRecommender:
 
         # Generate clinical rationale
         rationale = self._generate_rationale(
-            current_risk, action, base_action, risk_factors, escalation_reasons, patient_data=patient_data
+            current_risk, action, base_action, risk_factors, escalation_reasons, patient_data=data_for_thresholds
         )
 
         # Estimate expected outcome (using intervention simulation)

@@ -68,7 +68,7 @@ def trained_predictor(sample_data):
     X_train, X_val = X.iloc[:split_idx], X.iloc[split_idx:]
     y_train, y_val = y.iloc[:split_idx], y.iloc[split_idx:]
 
-    predictor = RiskPredictor(n_estimators=10, random_state=42)  # Fewer trees for speed
+    predictor = RiskPredictor(random_state=42)
     predictor.train(X_train, y_train, X_val, y_val)
 
     return predictor
@@ -80,24 +80,21 @@ class TestRiskPredictorInitialization:
     def test_init_default_parameters(self):
         """Test initialization with default parameters"""
         predictor = RiskPredictor()
-        assert predictor.n_estimators == 100
         assert predictor.random_state == 42
         assert predictor.model is not None
         assert predictor.feature_names is None
 
     def test_init_custom_parameters(self):
         """Test initialization with custom parameters"""
-        predictor = RiskPredictor(n_estimators=50, random_state=123)
-        assert predictor.n_estimators == 50
+        predictor = RiskPredictor(random_state=123)
         assert predictor.random_state == 123
 
     def test_model_hyperparameters(self):
         """Test that model has correct hyperparameters"""
         predictor = RiskPredictor()
-        assert predictor.model.max_depth == 10
-        assert predictor.model.min_samples_split == 5
-        assert predictor.model.min_samples_leaf == 2
+        assert predictor.model.max_iter == 2000
         assert predictor.model.class_weight == "balanced"
+        assert predictor.model.solver == "lbfgs"
 
 
 class TestRiskPredictorTraining:
@@ -110,7 +107,7 @@ class TestRiskPredictorTraining:
         X_train, X_val = X.iloc[:split_idx], X.iloc[split_idx:]
         y_train, y_val = y.iloc[:split_idx], y.iloc[split_idx:]
 
-        predictor = RiskPredictor(n_estimators=10, random_state=42)
+        predictor = RiskPredictor(random_state=42)
         metrics = predictor.train(X_train, y_train, X_val, y_val)
 
         # Check that metrics are returned
@@ -302,7 +299,6 @@ class TestRiskPredictorPersistence:
             new_predictor.load(model_path)
 
             # Check that parameters are restored
-            assert new_predictor.n_estimators == trained_predictor.n_estimators
             assert new_predictor.random_state == trained_predictor.random_state
             assert new_predictor.feature_names == trained_predictor.feature_names
 
