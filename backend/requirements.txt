@@ -17,4 +17,4 @@ python-multipart==0.0.22
 
 # Visualization (for notebooks and analysis)
 matplotlib==3.10.8
-seaborn==0.13.1
+seaborn==0.13.2
