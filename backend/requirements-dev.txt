@@ -7,7 +7,7 @@ pytest-asyncio==1.3.0
 
 # Test utilities
 httpx==0.26.0  # For testing FastAPI endpoints
-faker==22.0.0  # For generating test data
+faker==40.4.0  # For generating test data
 
 # Code quality
 black==25.12.0  # Code formatter
