@@ -10,7 +10,7 @@ joblib==1.5.3
 
 # Data validation
 pydantic==2.5.3
-pydantic-settings==2.1.0
+pydantic-settings==2.13.1
 
 # File handling
 python-multipart==0.0.22
